@@ -1,0 +1,33 @@
+syntax = "proto3";
+package main;
+
+option go_package = "github.com/DeepAung/gradient/grader-server/proto";
+
+service Grader {
+  rpc Grade(Input) returns (stream Result) {}
+}
+
+enum LanguageType {
+  CPP = 0;
+  C = 1;
+  GO = 2;
+  PYTHON = 3;
+}
+
+enum ResultType {
+  COMPILATION_ERROR = 0;
+  PASS = 1;
+  INCORRECT = 2;
+  RUNTIME_ERROR = 3;
+  TIME_LIMIT_EXCEEDED = 4;
+  MEMORY_LIMIT_EXCEEDED = 5;
+}
+
+message Input {
+  string code = 1;
+  string codeFilename = 2;
+  LanguageType language = 3;
+  uint32 taskId = 4;
+}
+
+message Result { ResultType result = 1; }
