@@ -1,4 +1,5 @@
-- [Overview Diagram](https://github.com/DeepAung/Gradient Overview Diagram.excalidraw.svg)
+## Overview Diagram
+![Overview Diagram](https://github.com/DeepAung/gradient/blob/main/doc/Gradient%20Overview%20Diagram.excalidraw.svg)
 
 ## TODO
 
