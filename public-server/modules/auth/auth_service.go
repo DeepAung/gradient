@@ -54,7 +54,7 @@ func (s *AuthSvc) SignIn(email, password string) (types.Passport, error) {
 		return types.Passport{}, err
 	}
 
-	if !utils.Compare(password, user.Password) {
+	if !utils.CompareHash(password, user.Password) {
 		return types.Passport{}, ErrInvalidEmailOrPassword
 	}
 

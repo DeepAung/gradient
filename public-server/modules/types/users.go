@@ -1,8 +1,18 @@
 package types
 
+type UsersSvc interface {
+	GetUser(id int) (User, error)
+	UpdateUser(id int, req UpdateUserReq) error
+	DeleteUser(id int) error
+}
+
 type UsersRepo interface {
 	CreateUser(username, email, hashedPassword string) (User, error)
+	FindOneUserById(id int) (User, error)
 	FindOneUserWithPasswordByEmail(email string) (UserWithPassword, error)
+	FindOneUserPasswordById(id int) (string, error)
+	UpdateUser(id int, req UpdateUserReq) error
+	DeleteUser(id int) error
 }
 
 type User struct {
@@ -20,4 +30,13 @@ type UserWithPassword struct {
 	Password   string `db:"password"`
 	PictureUrl string `db:"picture_url"`
 	IsAdmin    bool   `db:"is_admin"`
+}
+
+type UpdateUserReq struct {
+	Username   string  `db:"username"`
+	PictureUrl *string `db:"picture_url"` // optional field
+
+	// composite optional field?
+	CurrentPassword *string
+	NewPassword     *string `db:"password"`
 }
