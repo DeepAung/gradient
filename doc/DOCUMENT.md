@@ -1,5 +1,7 @@
 ## Overview Diagram
+
 ![Overview Diagram](https://github.com/DeepAung/gradient/blob/main/doc/Gradient%20Overview%20Diagram.excalidraw.svg)
+![Database Diagram](https://github.com/DeepAung/gradient/blob/main/doc/Database.png)
 
 ## TODO
 
@@ -7,18 +9,21 @@
 - [x] Which sql to use (PostgreSQL?)
 - [x] Sync this file with Excalidraw
 - [ ] Database
-  - [ ] Write sql migrate file
-  - [ ] Write sql seed file
+  - [x] Write sql migrate file
+  - [ ] Write sql seed file (complete 50%)
   - [ ] Setup GCP Bucket
 - [ ] Grader server
   - [x] simple gRPC Grade function
   - [ ] result type, memory limit, time limit
   - [ ] actual testcases puller
 - [ ] Public server
+  - [ ] Storer
+  - [ ] Middlewares
   - [ ] Users
   - [ ] Auth
   - [ ] Tasks
   - [ ] Submissions
+  - [ ] Views
 
 ## Future Plans
 
@@ -56,8 +61,8 @@
 
 ### Auth
 
-- SignIn(username, password)
-- SignUp(signUpData)
+- SignUp(username, email, password)
+- SignIn(email, password)
 - SignOut(tokenId)
 - UpdateTokens(tokenId, refreshToken)
 
@@ -86,6 +91,7 @@
 - email string
 - password hashString
 - picture_url string
+- is_admin
 
 ### Tokens
 
@@ -106,7 +112,9 @@
 
 - id int
 - user_id int
-- tasks_id int
+- task_id int
+- code string
+- language LanguageEnum
 - results string `e.g. "PPPPP--XTT" = 5 pass, 2 incorrect, 1 runtime error, 2 time limit exceeded`
 
 ## File Storage

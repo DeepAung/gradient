@@ -25,6 +25,12 @@ func NewServer(cfg *config.Config, db *sqlx.DB, app *fiber.App) *server {
 func (s *server) Start() {
 	s.app.Use(logger.New())
 	s.app.Use(recoverer.New())
+
+	// s.app.Use(jwtware.New(jwtware.Config{
+	// 	SigningKey:  jwtware.SigningKey{Key: s.cfg.Jwt.SecretKey},
+	// 	TokenLookup: "cookie:access-token",
+	// }))
+
 	// s.App.Static("/static", "./static")
 
 	s.setupRoutes()

@@ -11,8 +11,8 @@ CREATE TABLE "users" (
   "username" VARCHAR UNIQUE NOT NULL,
   "email" VARCHAR UNIQUE NOT NULL,
   "password" VARCHAR NOT NULL,
-  "is_admin" BOOLEAN NOT NULL DEFAULT FALSE,
   "picture_url" VARCHAR NOT NULL DEFAULT '',
+  "is_admin" BOOLEAN NOT NULL DEFAULT FALSE,
   "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
   "updated_at" TIMESTAMP NOT NULL DEFAULT (now())
 );
