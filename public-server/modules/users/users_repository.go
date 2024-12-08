@@ -1,10 +1,10 @@
-package usersrepo
+package users
 
 import (
 	"database/sql"
 	"errors"
 
-	"github.com/DeepAung/gradient/public-server/api/users"
+	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -18,14 +18,14 @@ type UsersRepo struct {
 	db *sqlx.DB
 }
 
-func NewUsersRepo(db *sqlx.DB) *UsersRepo {
+func NewUsersRepo(db *sqlx.DB) types.UsersRepo {
 	return &UsersRepo{
 		db: db,
 	}
 }
 
-func (r *UsersRepo) CreateUser(username, email, hashedPassword string) (users.User, error) {
-	var user users.User
+func (r *UsersRepo) CreateUser(username, email, hashedPassword string) (types.User, error) {
+	var user types.User
 	err := r.db.Get(&user,
 		`INSERT INTO users (username, email, password)
 			VALUES ($1, $2, $3)
@@ -38,24 +38,24 @@ func (r *UsersRepo) CreateUser(username, email, hashedPassword string) (users.Us
 
 	switch err.Error() {
 	case `pq: duplicate key value violates unique constraint "users_username_key"`:
-		return users.User{}, ErrUsernameUnique
+		return types.User{}, ErrUsernameUnique
 	case `pq: duplicate key value violates unique constraint "users_email_key"`:
-		return users.User{}, ErrEmailUnique
+		return types.User{}, ErrEmailUnique
 	default:
-		return users.User{}, err
+		return types.User{}, err
 	}
 }
 
-func (r *UsersRepo) FindOneUserWithPasswordByEmail(email string) (users.UserWithPassword, error) {
-	var user users.UserWithPassword
+func (r *UsersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWithPassword, error) {
+	var user types.UserWithPassword
 	err := r.db.Get(
 		&user,
 		`SELECT id, username, email, password, picture_url, is_admin
-		FROM users WHERE users.email = $1`,
+		FROM users WHERE email = $1`,
 		email,
 	)
 	if err == sql.ErrNoRows {
-		return users.UserWithPassword{}, ErrUserNotFound
+		return types.UserWithPassword{}, ErrUserNotFound
 	}
 	return user, err
 }

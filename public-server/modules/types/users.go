@@ -1,4 +1,9 @@
-package users
+package types
+
+type UsersRepo interface {
+	CreateUser(username, email, hashedPassword string) (User, error)
+	FindOneUserWithPasswordByEmail(email string) (UserWithPassword, error)
+}
 
 type User struct {
 	Id         int    `db:"id"`

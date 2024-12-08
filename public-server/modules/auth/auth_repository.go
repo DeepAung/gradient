@@ -1,10 +1,10 @@
-package authrepo
+package auth
 
 import (
 	"database/sql"
 	"errors"
 
-	"github.com/DeepAung/gradient/public-server/api/auth"
+	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -14,14 +14,14 @@ type AuthRepo struct {
 	db *sqlx.DB
 }
 
-func NewAuthRepo(db *sqlx.DB) *AuthRepo {
+func NewAuthRepo(db *sqlx.DB) types.AuthRepo {
 	return &AuthRepo{
 		db: db,
 	}
 }
 
-func (r *AuthRepo) CreateToken(accessToken, refreshToken string) (auth.Token, error) {
-	var token auth.Token
+func (r *AuthRepo) CreateToken(accessToken, refreshToken string) (types.Token, error) {
+	var token types.Token
 	err := r.db.Get(&token,
 		`INSERT INTO tokens (access_token, refresh_token)
 			VALUES ($1, $2)
@@ -29,7 +29,7 @@ func (r *AuthRepo) CreateToken(accessToken, refreshToken string) (auth.Token, er
 		accessToken, refreshToken)
 
 	if err == sql.ErrNoRows {
-		return auth.Token{}, ErrTokenNotFound
+		return types.Token{}, ErrTokenNotFound
 	}
 
 	return token, err

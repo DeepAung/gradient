@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 
-	"github.com/DeepAung/gradient/public-server/pkg/config"
-	"github.com/DeepAung/gradient/public-server/pkg/database"
-	"github.com/DeepAung/gradient/public-server/pkg/server"
+	"github.com/DeepAung/gradient/public-server/config"
+	"github.com/DeepAung/gradient/public-server/database"
+	"github.com/DeepAung/gradient/public-server/server"
 	"github.com/gofiber/fiber/v2"
 )
 
