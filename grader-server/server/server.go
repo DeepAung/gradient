@@ -108,5 +108,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	graderServer := newGraderServer()
 	proto.RegisterGraderServer(grpcServer, graderServer)
+
+	log.Printf("grader server running on port %d", *port)
 	grpcServer.Serve(lis)
 }
