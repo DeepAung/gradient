@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	ErrInvalidEmailOrPassword = errors.New("invalid email or password")
-	ErrInvalidRefreshToken    = errors.New("invalid refresh token")
+	ErrInvalidEmailOrPassword             = errors.New("invalid email or password")
+	ErrInvalidRefreshTokenOrTokenNotFound = errors.New("invalid refresh token or token not found")
 )
 
 type AuthSvc struct {
@@ -44,6 +44,9 @@ func (s *AuthSvc) SignUp(username, email, password string) (auth.Passport, error
 	}
 
 	user, err := s.usersRepo.CreateUser(username, email, hashedPassword)
+	if err != nil {
+		return auth.Passport{}, err
+	}
 	return s.generatePassport(user)
 }
 
@@ -80,7 +83,7 @@ func (s *AuthSvc) UpdateTokens(tokenId int, refreshToken string) (auth.Token, er
 		return auth.Token{}, err
 	}
 	if !has {
-		return auth.Token{}, ErrInvalidRefreshToken
+		return auth.Token{}, ErrInvalidRefreshTokenOrTokenNotFound
 	}
 
 	claims, err := mytoken.ParseToken(mytoken.RefreshToken, refreshToken, s.cfg.Jwt.SecretKey)

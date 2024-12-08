@@ -25,7 +25,7 @@ func (r *AuthRepo) CreateToken(accessToken, refreshToken string) (auth.Token, er
 	err := r.db.Get(&token,
 		`INSERT INTO tokens (access_token, refresh_token)
 			VALUES ($1, $2)
-		RETURNING *;`,
+		RETURNING id, access_token, refresh_token;`,
 		accessToken, refreshToken)
 
 	if err == sql.ErrNoRows {
