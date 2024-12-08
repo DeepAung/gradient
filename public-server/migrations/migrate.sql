@@ -44,6 +44,7 @@ CREATE TABLE "submissions" (
   "code" VARCHAR NOT NULL,
   "language" LANGUAGE NOT NULL,
   "results" VARCHAR NOT NULL,
+  "result_percent" REAL NOT NULL,
   "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
   "updated_at" TIMESTAMP NOT NULL DEFAULT (now())
 );
