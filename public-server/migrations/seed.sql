@@ -18,6 +18,7 @@ INSERT INTO "submissions" ("user_id", "task_id", "code", "language", "results", 
   (1, 1, 'println(123456)', 'go', '----------', 0),
   (1, 2, 'for _ in range(len(int(input()))): print(int(input()) + int(input()))', 'python', 'PPPPPPPPPP', 100),
   (1, 2, 'print(123456)', 'python', '----------', 0),
-  (1, 3, 'print(123456)', 'python', '----------', 0);
+  (1, 3, 'print(123456)', 'python', '-', 0),
+  (2, 1, 'print(123456)', 'python', '----------', 0);
 
 COMMIT;
