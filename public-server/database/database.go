@@ -16,8 +16,8 @@ func InitDB(dataSourceName string) *sqlx.DB {
 	return db
 }
 
-func RunSQL(db *sqlx.DB, migrateSourceName string) {
-	b, err := os.ReadFile(migrateSourceName)
+func RunSQL(db *sqlx.DB, sqlSourceName string) {
+	b, err := os.ReadFile(sqlSourceName)
 	if err != nil {
 		log.Fatal("MigrateDB: os.ReadFile: ", err)
 	}

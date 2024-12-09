@@ -135,4 +135,7 @@ func TestDeleteUser(t *testing.T) {
 		err := svc.DeleteUser(1)
 		asserts.EqualError(t, err, nil)
 	})
+
+	database.RunSQL(db, migrateSourceName)
+	database.RunSQL(db, seedSourceName)
 }

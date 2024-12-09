@@ -1,10 +1,13 @@
 BEGIN;
 
+DROP EXTENSION IF EXISTS pg_trgm CASCADE;
 DROP TABLE IF EXISTS "users" CASCADE;
 DROP TABLE IF EXISTS "tokens" CASCADE;
 DROP TABLE IF EXISTS "tasks" CASCADE;
 DROP TABLE IF EXISTS "submissions" CASCADE;
 DROP TYPE IF EXISTS LANGUAGE CASCADE;
+
+CREATE EXTENSION pg_trgm;
 
 CREATE TABLE "users" (
   "id" SERIAL PRIMARY KEY,
@@ -31,7 +34,7 @@ CREATE TABLE "tasks" (
   "display_name" VARCHAR UNIQUE NOT NULL,
   "url_name" VARCHAR UNIQUE NOT NULL,
   "content_url" VARCHAR NOT NULL,
-  "testcase_count" INTEGER NOT NULL,
+  "testcase_count" INTEGER NOT NULL CHECK("testcase_count" > 0),
   "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
   "updated_at" TIMESTAMP NOT NULL DEFAULT (now())
 );
