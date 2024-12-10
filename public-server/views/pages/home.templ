@@ -1,0 +1,10 @@
+package pages
+
+import "github.com/DeepAung/gradient/public-server/modules/types"
+import "github.com/DeepAung/gradient/public-server/views/layouts"
+
+templ Home(user types.User) {
+@layouts.WithNav(user) {
+<h1>Home</h1>
+}
+}

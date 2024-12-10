@@ -1,3 +1,6 @@
 *.env*
 !*.env.example
 tmp/
+node_modules/
+**/*_templ.go
+**/*_templ.txt

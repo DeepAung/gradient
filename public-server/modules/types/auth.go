@@ -16,6 +16,18 @@ type AuthRepo interface {
 	DeleteToken(tokenId int) error
 }
 
+type SignInDTO struct {
+	Email    string `form:"email" validate:"required,email"`
+	Password string `form:"password" validate:"required"`
+}
+
+type SignUpDTO struct {
+	Username        string `form:"username" validate:"required"`
+	Email           string `form:"email" validate:"required,email"`
+	Password        string `form:"password" validate:"required"`
+	ConfirmPassword string `form:"confirm-password" validate:"required"`
+}
+
 type Token struct {
 	Id           int    `db:"id"`
 	AccessToken  string `db:"access_token"`

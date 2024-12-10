@@ -1,7 +1,9 @@
 air:
 	air -c .air.toml
+templ:
+	templ generate --watch --proxy="http://localhost:3000"
 tailwind:
-	asfd
+	npx tailwindcss -i ./public/input.css -o ./public/output.css --watch
 
 db.create:
 	docker create --name gradient-postgresql --env-file postgres.env.dev -p 5432:5432 bitnami/postgresql:latest
