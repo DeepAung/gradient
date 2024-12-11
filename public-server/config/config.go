@@ -16,11 +16,11 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Address      string
-	Timeout      time.Duration
-	BodyLimit    string
-	DbUrl        string
-	GcpBucketUrl string
+	Address       string
+	Timeout       time.Duration
+	BodyLimit     string
+	DbUrl         string
+	GcpBucketName string
 }
 
 type JwtConfig struct {
@@ -36,11 +36,11 @@ func NewConfig(envPath string) *Config {
 
 	return &Config{
 		App: &AppConfig{
-			Address:      os.Getenv("ADDRESS"),
-			Timeout:      getenvDuration("TIMEOUT"),
-			BodyLimit:    os.Getenv("BODY_LIMIT"),
-			DbUrl:        os.Getenv("DB_URL"),
-			GcpBucketUrl: os.Getenv("GCP_BUCKET_URL"),
+			Address:       os.Getenv("ADDRESS"),
+			Timeout:       getenvDuration("TIMEOUT"),
+			BodyLimit:     os.Getenv("BODY_LIMIT"),
+			DbUrl:         os.Getenv("DB_URL"),
+			GcpBucketName: os.Getenv("GCP_BUCKET_NAME"),
 		},
 		Jwt: &JwtConfig{
 			SecretKey:      []byte(os.Getenv("SECRET_KEY")),
