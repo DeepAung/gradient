@@ -15,8 +15,8 @@ var (
 	seedSourceName    = "../../migrations/seed.sql"
 	cfg               *config.Config
 	db                *sqlx.DB
-	repo              types.TaskRepo
-	svc               types.TaskSvc
+	repo              types.TasksRepo
+	svc               types.TasksSvc
 
 	listTasks = []types.Task{
 		{Id: 1, DisplayName: "Two Sum", UrlName: "two_sum", TestcaseCount: 10},
@@ -48,8 +48,8 @@ func init() {
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
-	repo = NewTaskRepo(db)
-	svc = NewTaskSvc(repo)
+	repo = NewTasksRepo(db)
+	svc = NewTasksSvc(repo)
 }
 
 func TestGetTask(t *testing.T) {
@@ -68,31 +68,31 @@ func TestGetTask(t *testing.T) {
 
 func TestGetTasks(t *testing.T) {
 	t.Run("normal get tasks", func(t *testing.T) {
-		tasks, err := svc.GetTasks("", false, 0, 100)
+		tasks, err := svc.GetTasks(1, "", false, 0, 100)
 		asserts.EqualError(t, err, nil)
 		asserts.Equal(t, "tasks", tasks, listTasks)
 	})
 
 	t.Run("with search", func(t *testing.T) {
-		tasks, err := svc.GetTasks("two", false, 0, 100)
+		tasks, err := svc.GetTasks(1, "two", false, 0, 100)
 		asserts.EqualError(t, err, nil)
 		asserts.Equal(t, "tasks", tasks, listTasks[:2])
 	})
 
 	t.Run("only completed", func(t *testing.T) {
-		tasks, err := svc.GetTasks("", true, 0, 100)
+		tasks, err := svc.GetTasks(1, "", true, 0, 100)
 		asserts.EqualError(t, err, nil)
 		asserts.Equal(t, "tasks", tasks, listTasks[:2])
 	})
 
 	t.Run("offset", func(t *testing.T) {
-		tasks, err := svc.GetTasks("", false, 1, 100)
+		tasks, err := svc.GetTasks(1, "", false, 1, 100)
 		asserts.EqualError(t, err, nil)
 		asserts.Equal(t, "tasks", tasks, listTasks[1:])
 	})
 
 	t.Run("limit", func(t *testing.T) {
-		tasks, err := svc.GetTasks("", false, 0, 2)
+		tasks, err := svc.GetTasks(1, "", false, 0, 2)
 		asserts.EqualError(t, err, nil)
 		asserts.Equal(t, "tasks", tasks, listTasks[0:2])
 	})

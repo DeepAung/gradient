@@ -1,20 +1,18 @@
 package layouts
 
 templ Simple() {
-<!doctype html>
-<html>
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="/public/output.css" rel="stylesheet">
-  <script src="https://kit.fontawesome.com/8e504b9924.js" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/htmx.org@2.0.3"></script>
-</head>
-
-<body class="h-dvh">
-  {children...}
-</body>
-
-</html>
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<link href="/public/output.css" rel="stylesheet"/>
+			<script src="https://kit.fontawesome.com/8e504b9924.js" crossorigin="anonymous"></script>
+			<script src="https://unpkg.com/htmx.org@2.0.3"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+		</head>
+		<body class="h-dvh">
+			{ children... }
+		</body>
+	</html>
 }

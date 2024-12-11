@@ -29,6 +29,8 @@ func (m *Middleware) OnlyAuthorized() fiber.Handler {
 		SuccessHandler: func(c *fiber.Ctx) error {
 			return c.Next()
 		},
+		ContextKey: "claims",
+		Claims:     &types.JwtClaims{},
 	})
 }
 

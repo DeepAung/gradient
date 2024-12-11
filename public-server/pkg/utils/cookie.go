@@ -1,10 +1,25 @@
 package utils
 
 import (
+	"strconv"
 	"time"
 
+	"github.com/DeepAung/gradient/public-server/config"
+	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/gofiber/fiber/v2"
 )
+
+func SetTokenCookies(c *fiber.Ctx, token types.Token, cfg *config.Config) {
+	SetCookie(c, "accessToken", token.AccessToken, cfg.Jwt.AccessExpires)
+	SetCookie(c, "refreshToken", token.RefreshToken, cfg.Jwt.RefreshExpires)
+	SetCookie(c, "tokenId", strconv.Itoa(token.Id), cfg.Jwt.RefreshExpires)
+}
+
+func DeleteTokenCookies(c *fiber.Ctx) {
+	DeleteCookie(c, "accessToken")
+	DeleteCookie(c, "refreshToken")
+	DeleteCookie(c, "tokenId")
+}
 
 func SetCookie(c *fiber.Ctx, name, value string, maxAge time.Duration) {
 	var expires time.Time

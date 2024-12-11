@@ -1,10 +1,51 @@
 package pages
 
-import "github.com/DeepAung/gradient/public-server/modules/types"
-import "github.com/DeepAung/gradient/public-server/views/layouts"
+import (
+	"github.com/DeepAung/gradient/public-server/modules/types"
+	"github.com/DeepAung/gradient/public-server/views/components"
+	"github.com/DeepAung/gradient/public-server/views/layouts"
+)
 
 templ Home(user types.User) {
-@layouts.WithNav(user) {
-<h1>Home</h1>
-}
+	@layouts.WithNav(user, nil) {
+		<div class="overflow-x-auto mx-4 mt-4">
+			<form
+				id="tasks-form"
+				x-data="{ page: 1 }"
+				x-init="$watch('page', () => htmx.trigger('#tasks-form', 'getTasks'))"
+				hx-trigger="load, getTasks, keyup changed delay:500ms"
+				hx-post="/api/tasks"
+				hx-target="#task-table"
+				hx-swap="outerHTML"
+				class="space-y-3"
+			>
+				<label class="input input-bordered flex items-center gap-2">
+					<input type="text" class="grow" placeholder="Search" name="search"/>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 16 16"
+						fill="currentColor"
+						class="h-4 w-4 opacity-70"
+					>
+						<path
+							fill-rule="evenodd"
+							d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+							clip-rule="evenodd"
+						></path>
+					</svg>
+					<div class="mx-4 flex items-center gap-2">
+						<input @click="htmx.trigger('#tasks-form', 'getTasks')" type="checkbox" class="checkbox" name="only_completed"/>
+						<span>Only Completed</span>
+					</div>
+				</label>
+				<input x-ref="page" id="page" type="number" class="hidden" name="page" :value="page"/>
+				@components.TasksTable(nil)
+				<div class="join flex flex-row items-center justify-center">
+					<button @click.prevent="page = Math.max(1, page - 1)" class="join-item btn">«</button>
+					<button class="join-item btn">Page <span x-text="page"></span></button>
+					<button @click.prevent="page += 1" class="join-item btn">»</button>
+				</div>
+			</form>
+		</div>
+	}
 }

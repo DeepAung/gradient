@@ -15,7 +15,6 @@ func main() {
 	flag.Parse()
 
 	cfg := config.NewConfig(*envPath)
-	cfg.Print()
 	db := database.InitDB(cfg.App.DbUrl)
 	app := fiber.New()
 

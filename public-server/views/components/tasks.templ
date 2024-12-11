@@ -1,0 +1,30 @@
+package components
+
+import (
+	"fmt"
+	"github.com/DeepAung/gradient/public-server/modules/types"
+)
+
+templ TasksTable(tasks []types.Task) {
+	<table id="task-table" class="table">
+		<!-- head -->
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Solved</th>
+				<th>Score</th>
+			</tr>
+		</thead>
+		<tbody>
+			for _, task := range tasks {
+				<tr class="hover cursor-pointer">
+					<th>{ fmt.Sprint(task.Id) }</th>
+					<td>{ task.DisplayName }</td>
+					<td>{ fmt.Sprint(task.SolvedNumber) }</td>
+					<td>{ fmt.Sprint(task.Score) }</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}

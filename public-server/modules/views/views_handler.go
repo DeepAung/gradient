@@ -7,10 +7,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ViewsHandler struct{}
+type ViewsHandler struct {
+	usersSvc types.UsersSvc
+	tasksSvc types.TasksSvc
+}
 
-func InitViewsHandler(router fiber.Router, mid types.Middleware) {
-	handler := &ViewsHandler{}
+func InitViewsHandler(
+	router fiber.Router,
+	mid types.Middleware,
+	usersSvc types.UsersSvc,
+	tasksSvc types.TasksSvc,
+) {
+	handler := &ViewsHandler{
+		usersSvc: usersSvc,
+		tasksSvc: tasksSvc,
+	}
+
 	router.Get("/", handler.Welcome)
 	router.Get("/signup", mid.OnlyUnAuthorized(), handler.SignUp)
 	router.Get("/signin", mid.OnlyUnAuthorized(), handler.SignIn)
@@ -30,11 +42,17 @@ func (h *ViewsHandler) SignUp(c *fiber.Ctx) error {
 }
 
 func (h *ViewsHandler) Home(c *fiber.Ctx) error {
-	return utils.Render(c, pages.Home(types.User{
-		Id:         1,
-		Username:   "DeepAung",
-		Email:      "i.deepaung@gmail.com",
-		PictureUrl: "",
-		IsAdmin:    false,
-	}))
+	payload, ok := utils.GetPayload(c)
+	if !ok {
+		utils.DeleteTokenCookies(c)
+		return c.Redirect("/signin", fiber.StatusFound)
+	}
+
+	user, err := h.usersSvc.GetUser(payload.UserId)
+	if err != nil {
+		utils.DeleteTokenCookies(c)
+		return c.Redirect("/signin", fiber.StatusFound)
+	}
+
+	return utils.Render(c, pages.Home(user))
 }
