@@ -1,16 +1,20 @@
 package auth
 
 import (
-	"errors"
-
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/pkg/utils"
+	"github.com/gofiber/fiber/v2"
 )
 
 var (
-	ErrInvalidEmailOrPassword             = errors.New("invalid email or password")
-	ErrInvalidRefreshTokenOrTokenNotFound = errors.New("invalid refresh token or token not found")
+	ErrInvalidEmailOrPassword = fiber.NewError(
+		fiber.StatusBadRequest,
+		"invalid email or password",
+	)
+	ErrInvalidRefreshTokenOrTokenNotFound = fiber.NewError(fiber.StatusBadRequest,
+		"invalid refresh token or token not found",
+	)
 )
 
 type AuthSvc struct {
@@ -118,8 +122,8 @@ func (s *AuthSvc) UpdateTokens(tokenId int, refreshToken string) (types.Token, e
 
 func (s *AuthSvc) generatePassport(user types.User) (types.Passport, error) {
 	payload := types.Payload{
-		UserId:   user.Id,
-		Username: user.Username,
+		UserId: user.Id,
+		Email:  user.Email,
 	}
 	accessToken, err := generateToken(
 		accessTokenType,

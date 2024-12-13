@@ -2,17 +2,17 @@ package tasks
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/DeepAung/gradient/public-server/modules/types"
+	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
 
 var (
-	ErrTaskNotFound         = errors.New("task not found")
-	ErrUniqueDisplayName    = errors.New("display name already exists")
-	ErrUniqueUrlName        = errors.New("url name already exists")
-	ErrInvalidTestcaseCount = errors.New("invalid testcase count")
+	ErrTaskNotFound         = fiber.NewError(fiber.StatusBadRequest, "task not found")
+	ErrUniqueDisplayName    = fiber.NewError(fiber.StatusBadRequest, "display name already exists")
+	ErrUniqueUrlName        = fiber.NewError(fiber.StatusBadRequest, "url name already exists")
+	ErrInvalidTestcaseCount = fiber.NewError(fiber.StatusBadRequest, "invalid testcase count")
 )
 
 type TasksRepo struct {

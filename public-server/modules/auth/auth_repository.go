@@ -2,13 +2,13 @@ package auth
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/DeepAung/gradient/public-server/modules/types"
+	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
 
-var ErrTokenNotFound = errors.New("token not found")
+var ErrTokenNotFound = fiber.NewError(fiber.StatusBadRequest, "token not found")
 
 type AuthRepo struct {
 	db *sqlx.DB

@@ -3,11 +3,11 @@ package server
 import (
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/modules/auth"
-	"github.com/DeepAung/gradient/public-server/modules/middlewares"
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/modules/users"
 	"github.com/DeepAung/gradient/public-server/modules/views"
+	"github.com/DeepAung/gradient/public-server/pkg/storer"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recoverer "github.com/gofiber/fiber/v2/middleware/recover"
@@ -15,18 +15,26 @@ import (
 )
 
 type server struct {
-	cfg *config.Config
-	db  *sqlx.DB
-	app *fiber.App
-	mid types.Middleware
+	cfg    *config.Config
+	db     *sqlx.DB
+	app    *fiber.App
+	mid    types.Middleware
+	storer storer.Storer
 }
 
-func NewServer(cfg *config.Config, db *sqlx.DB, app *fiber.App) *server {
+func NewServer(
+	cfg *config.Config,
+	db *sqlx.DB,
+	app *fiber.App,
+	mid types.Middleware,
+	storer storer.Storer,
+) *server {
 	return &server{
-		cfg: cfg,
-		db:  db,
-		app: app,
-		mid: middlewares.NewMiddleware(cfg),
+		cfg:    cfg,
+		db:     db,
+		app:    app,
+		mid:    mid,
+		storer: storer,
 	}
 }
 
@@ -48,8 +56,10 @@ func (s *server) setupRoutes() {
 
 	apiGroup := s.app.Group("/api")
 
+	usersGroup := apiGroup.Group("/users")
 	usersRepo := users.NewUsersRepo(s.db)
-	usersSvc := users.NewUsersSvc(usersRepo)
+	usersSvc := users.NewUsersSvc(usersRepo, s.storer, s.cfg)
+	users.InitUsersHandler(usersGroup, s.mid, usersSvc)
 
 	tasksGroup := apiGroup.Group("/tasks")
 	tasksRepo := tasks.NewTasksRepo(s.db)

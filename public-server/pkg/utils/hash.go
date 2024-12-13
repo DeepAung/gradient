@@ -2,7 +2,11 @@ package utils
 
 import (
 	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
+	"io"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,26 +26,50 @@ func CompareHash(str, hashedStr string) bool {
 	return err == nil
 }
 
-func Encrypt(str string, secret []byte) (string, error) {
+func Encrypt(inputStr string, secret []byte) (string, error) {
 	block, err := aes.NewCipher(secret)
 	if err != nil {
 		return "", err
 	}
 
-	encryptedBytes := make([]byte, len(str))
-	block.Encrypt(encryptedBytes, []byte(str))
+	gcmInstance, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
 
-	return string(encryptedBytes), nil
+	nonce := make([]byte, gcmInstance.NonceSize())
+	_, err = io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return "", err
+	}
+
+	encryptedBytes := gcmInstance.Seal(nonce, nonce, []byte(inputStr), nil)
+	encrypedStr := base64.StdEncoding.EncodeToString(encryptedBytes)
+	return encrypedStr, nil
 }
 
-func Decrypt(str string, secret []byte) (string, error) {
+func Decrypt(encrypedStr string, secret []byte) (string, error) {
+	encryptedBytes, err := base64.StdEncoding.DecodeString(encrypedStr)
+	if err != nil {
+		return "", err
+	}
+
 	block, err := aes.NewCipher(secret)
 	if err != nil {
 		return "", err
 	}
 
-	decryptedBytes := make([]byte, len(str))
-	block.Decrypt(decryptedBytes, []byte(str))
+	gcmInstance, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
 
+	nonceSize := gcmInstance.NonceSize()
+	nonce, cipheredText := encryptedBytes[:nonceSize], encryptedBytes[nonceSize:]
+
+	decryptedBytes, err := gcmInstance.Open(nil, nonce, cipheredText, nil)
+	if err != nil {
+		return "", err
+	}
 	return string(decryptedBytes), nil
 }

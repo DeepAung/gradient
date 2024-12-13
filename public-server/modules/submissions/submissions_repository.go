@@ -2,18 +2,18 @@ package submissions
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/modules/users"
+	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
 
 var (
-	ErrSubmissionNotFound   = errors.New("submission not found")
-	ErrInvalidLanguage      = errors.New("invalid language")
-	ErrInvalidResultPercent = errors.New("invalid result percent")
+	ErrSubmissionNotFound   = fiber.NewError(fiber.StatusBadRequest, "submission not found")
+	ErrInvalidLanguage      = fiber.NewError(fiber.StatusBadRequest, "invalid language")
+	ErrInvalidResultPercent = fiber.NewError(fiber.StatusBadRequest, "invalid result percent")
 )
 
 type SubmissionRepo struct {

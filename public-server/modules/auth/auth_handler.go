@@ -45,7 +45,8 @@ func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
 	passport, err := h.svc.SignIn(dto.Email, dto.Password)
 	if err != nil {
 		c.Response().Header.Add("HX-Retarget", "#error-text")
-		return c.SendString(err.Error())
+		_, msg := utils.ParseError(err)
+		return c.SendString(msg)
 	}
 
 	utils.SetTokenCookies(c, passport.Token, h.cfg)
@@ -72,7 +73,8 @@ func (h *AuthHandler) SignUp(c *fiber.Ctx) error {
 	passport, err := h.svc.SignUp(dto.Username, dto.Email, dto.Password)
 	if err != nil {
 		c.Response().Header.Add("HX-Retarget", "#error-text")
-		return c.SendString(err.Error())
+		_, msg := utils.ParseError(err)
+		return c.SendString(msg)
 	}
 
 	utils.SetTokenCookies(c, passport.Token, h.cfg)

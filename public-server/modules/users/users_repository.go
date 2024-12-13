@@ -2,16 +2,16 @@ package users
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/DeepAung/gradient/public-server/modules/types"
+	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
 
 var (
-	ErrUserNotFound   = errors.New("user not found")
-	ErrUsernameUnique = errors.New("username already exist")
-	ErrEmailUnique    = errors.New("email already exist")
+	ErrUserNotFound   = fiber.NewError(fiber.StatusBadRequest, "user not found")
+	ErrUsernameUnique = fiber.NewError(fiber.StatusBadRequest, "username already exist")
+	ErrEmailUnique    = fiber.NewError(fiber.StatusBadRequest, "email already exist")
 )
 
 type UsersRepo struct {

@@ -1,7 +1,10 @@
 package types
 
+import "mime/multipart"
+
 type UsersSvc interface {
 	GetUser(id int) (User, error)
+	ReplacePicture(id int, email string, picture *multipart.FileHeader) (string, error)
 	UpdateUser(id int, req UpdateUserReq) error
 	DeleteUser(id int) error
 }

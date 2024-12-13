@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -24,6 +25,19 @@ func NewGcpStorer(cfg *config.Config) Storer {
 	return &gcpStorer{
 		cfg: cfg,
 	}
+}
+
+func (s *gcpStorer) UploadMultipart(
+	fileHeader *multipart.FileHeader,
+	dest string,
+	public bool,
+) (FileRes, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return FileRes{}, err
+	}
+	defer file.Close()
+	return s.Upload(file, dest, public)
 }
 
 func (s *gcpStorer) Upload(reader io.Reader, dest string, public bool) (FileRes, error) {

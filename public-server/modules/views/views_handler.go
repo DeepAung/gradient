@@ -27,6 +27,7 @@ func InitViewsHandler(
 	router.Get("/signup", mid.OnlyUnAuthorized(), handler.SignUp)
 	router.Get("/signin", mid.OnlyUnAuthorized(), handler.SignIn)
 	router.Get("/home", mid.OnlyAuthorized(), handler.Home)
+	router.Get("/profile", mid.OnlyAuthorized(), handler.Profile)
 }
 
 func (h *ViewsHandler) Welcome(c *fiber.Ctx) error {
@@ -55,4 +56,20 @@ func (h *ViewsHandler) Home(c *fiber.Ctx) error {
 	}
 
 	return utils.Render(c, pages.Home(user))
+}
+
+func (h *ViewsHandler) Profile(c *fiber.Ctx) error {
+	payload, ok := utils.GetPayload(c)
+	if !ok {
+		utils.DeleteTokenCookies(c)
+		return c.Redirect("/signin", fiber.StatusFound)
+	}
+
+	user, err := h.usersSvc.GetUser(payload.UserId)
+	if err != nil {
+		_, msg := utils.ParseError(err)
+		return c.SendString(msg) // TODO: e.g. user not found
+	}
+
+	return utils.Render(c, pages.Profile(user))
 }

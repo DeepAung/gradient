@@ -45,6 +45,6 @@ type JwtClaims struct {
 }
 
 type Payload struct {
-	UserId   int
-	Username string
+	UserId int
+	Email  string
 }

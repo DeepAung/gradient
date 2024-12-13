@@ -2,12 +2,14 @@ package storer
 
 import (
 	"io"
+	"mime/multipart"
 	"path"
 )
 
 const basePath = "https://storage.googleapis.com/gradient-bucket-dev"
 
 type Storer interface {
+	UploadMultipart(f *multipart.FileHeader, dest string, public bool) (FileRes, error)
 	Upload(reader io.Reader, dest string, public bool) (FileRes, error)
 	Delete(dest string) error
 }
@@ -29,10 +31,17 @@ func NewFileResFromDest(dest string) FileRes {
 	filename := path.Base(dest)
 	dir := path.Dir(dest)
 	return FileRes{
-		Url:      path.Join(basePath, dest),
+		Url:      basePath + "/" + dest,
 		BasePath: basePath,
 		Dest:     dest,
 		Dir:      dir,
 		Filename: filename,
 	}
+}
+
+func NewFileResFromUrl(url string) FileRes {
+	// url = `{basePath}/{dest}`
+	// exclude `{basePath}/`
+	dest := url[len(basePath)+1:]
+	return NewFileResFromDest(dest)
 }
