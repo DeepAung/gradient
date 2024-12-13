@@ -7,6 +7,7 @@ import (
 	"github.com/DeepAung/gradient/public-server/database"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/pkg/asserts"
+	"github.com/DeepAung/gradient/public-server/pkg/storer"
 	"github.com/DeepAung/gradient/public-server/pkg/utils"
 	"github.com/jmoiron/sqlx"
 )
@@ -15,6 +16,7 @@ var (
 	migrateSourceName = "../../migrations/migrate.sql"
 	seedSourceName    = "../../migrations/seed.sql"
 	cfg               *config.Config
+	myStorer          storer.Storer
 	db                *sqlx.DB
 	repo              types.UsersRepo
 	svc               types.UsersSvc
@@ -22,11 +24,14 @@ var (
 
 func init() {
 	cfg = config.NewConfig("../../.env.dev")
+	myStorer = storer.NewGcpStorer(cfg)
+
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
+
 	repo = NewUsersRepo(db)
-	svc = NewUsersSvc(repo)
+	svc = NewUsersSvc(repo, myStorer, cfg)
 }
 
 func TestGetUser(t *testing.T) {

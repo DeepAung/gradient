@@ -15,23 +15,32 @@ var (
 	ErrInvalidTestcaseCount = fiber.NewError(fiber.StatusBadRequest, "invalid testcase count")
 )
 
-type TasksRepo struct {
+type tasksRepo struct {
 	db *sqlx.DB
 }
 
 func NewTasksRepo(db *sqlx.DB) types.TasksRepo {
-	return &TasksRepo{
+	return &tasksRepo{
 		db: db,
 	}
 }
 
-func (r *TasksRepo) FindOneTask(id int) (types.Task, error) {
+func (r *tasksRepo) FindOneTask(userId, taskId int) (types.Task, error) {
 	var task types.Task
 	err := r.db.Get(&task,
-		`SELECT id, display_name, url_name, content_url, testcase_count
+		`SELECT
+			tasks.id,
+			tasks.display_name,
+			tasks.url_name,
+			tasks.content_url,
+			tasks.testcase_count,
+			tasks.solved_number,
+			COALESCE(info.score, 0) as score
 		FROM tasks 
-		WHERE id = $1;`,
-		id)
+		LEFT JOIN users_tasks_info AS info
+		ON info.user_id = $1 AND info.task_id = $2
+		WHERE tasks.id = $2;`,
+		userId, taskId)
 	if err == sql.ErrNoRows {
 		return types.Task{}, ErrTaskNotFound
 	}
@@ -40,7 +49,7 @@ func (r *TasksRepo) FindOneTask(id int) (types.Task, error) {
 }
 
 // [startIndex, stopIndex)
-func (r *TasksRepo) FindManyTasks(
+func (r *tasksRepo) FindManyTasks(
 	userId int,
 	search string,
 	onlyCompleted bool,
@@ -80,7 +89,7 @@ func (r *TasksRepo) FindManyTasks(
 	return tasks, err
 }
 
-func (r *TasksRepo) CreateTask(req types.CreateTaskReq) error {
+func (r *tasksRepo) CreateTask(req types.CreateUpdateTaskReq) error {
 	result, err := r.db.Exec(
 		`INSERT INTO tasks (display_name, url_name, content_url, testcase_count) 
 			VALUES ($1, $2, $3, $4)`,
@@ -108,11 +117,11 @@ func (r *TasksRepo) CreateTask(req types.CreateTaskReq) error {
 	return nil
 }
 
-func (r *TasksRepo) UpdateTask(req types.Task) error {
+func (r *tasksRepo) UpdateTask(id int, req types.CreateUpdateTaskReq) error {
 	result, err := r.db.Exec(
 		`UPDATE tasks SET display_name = $1, url_name = $2, content_url = $3, testcase_count = $4
 		WHERE id = $5`,
-		req.DisplayName, req.UrlName, req.ContentUrl, req.TestcaseCount, req.Id)
+		req.DisplayName, req.UrlName, req.ContentUrl, req.TestcaseCount, id)
 	if err != nil {
 		switch err.Error() {
 		case `pq: duplicate key value violates unique constraint "tasks_display_name_key"`:
@@ -136,7 +145,7 @@ func (r *TasksRepo) UpdateTask(req types.Task) error {
 	return nil
 }
 
-func (r *TasksRepo) DeleteTask(id int) error {
+func (r *tasksRepo) DeleteTask(id int) error {
 	result, err := r.db.Exec(`DELETE FROM tasks WHERE id = $1`, id)
 	if err != nil {
 		return err

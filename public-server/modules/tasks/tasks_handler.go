@@ -7,21 +7,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const ItemsPerPage = 50
+const itemsPerPage = 50
 
-type TasksHandler struct {
+type tasksHandler struct {
 	tasksSvc types.TasksSvc
 }
 
 func InitTasksHandler(router fiber.Router, mid types.Middleware, tasksSvc types.TasksSvc) {
-	handler := &TasksHandler{
+	handler := &tasksHandler{
 		tasksSvc: tasksSvc,
 	}
 
 	router.Post("/", mid.OnlyAuthorized(), handler.GetTasks)
 }
 
-func (h *TasksHandler) GetTasks(c *fiber.Ctx) error {
+func (h *tasksHandler) GetTasks(c *fiber.Ctx) error {
 	payload, ok := utils.GetPayload(c)
 	if !ok {
 		utils.DeleteTokenCookies(c)
@@ -37,8 +37,8 @@ func (h *TasksHandler) GetTasks(c *fiber.Ctx) error {
 		return utils.RenderAlert(c, components.AlertError(err.Error()))
 	}
 
-	startIndex := ItemsPerPage * (dto.Page - 1)
-	stopIndex := startIndex + ItemsPerPage
+	startIndex := itemsPerPage * (dto.Page - 1)
+	stopIndex := startIndex + itemsPerPage
 	tasks, err := h.tasksSvc.GetTasks(
 		payload.UserId,
 		dto.Search,

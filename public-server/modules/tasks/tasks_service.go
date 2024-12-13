@@ -2,21 +2,21 @@ package tasks
 
 import "github.com/DeepAung/gradient/public-server/modules/types"
 
-type TasksSvc struct {
+type tasksSvc struct {
 	repo types.TasksRepo
 }
 
 func NewTasksSvc(repo types.TasksRepo) types.TasksSvc {
-	return &TasksSvc{
+	return &tasksSvc{
 		repo: repo,
 	}
 }
 
-func (s *TasksSvc) GetTask(id int) (types.Task, error) {
-	return s.repo.FindOneTask(id)
+func (s *tasksSvc) GetTask(userId, taskId int) (types.Task, error) {
+	return s.repo.FindOneTask(userId, taskId)
 }
 
-func (s *TasksSvc) GetTasks(
+func (s *tasksSvc) GetTasks(
 	userId int,
 	search string,
 	onlyCompleted bool,
@@ -25,14 +25,14 @@ func (s *TasksSvc) GetTasks(
 	return s.repo.FindManyTasks(userId, search, onlyCompleted, startIndex, stopIndex)
 }
 
-func (s *TasksSvc) CreateTask(req types.CreateTaskReq) error {
+func (s *tasksSvc) CreateTask(req types.CreateUpdateTaskReq) error {
 	return s.repo.CreateTask(req)
 }
 
-func (s *TasksSvc) UpdateTask(req types.Task) error {
-	return s.repo.UpdateTask(req)
+func (s *tasksSvc) UpdateTask(id int, req types.CreateUpdateTaskReq) error {
+	return s.repo.UpdateTask(id, req)
 }
 
-func (s *TasksSvc) DeleteTask(id int) error {
+func (s *tasksSvc) DeleteTask(id int) error {
 	return s.repo.DeleteTask(id)
 }

@@ -7,17 +7,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type Middleware struct {
+type middleware struct {
 	cfg *config.Config
 }
 
 func NewMiddleware(cfg *config.Config) types.Middleware {
-	return &Middleware{
+	return &middleware{
 		cfg: cfg,
 	}
 }
 
-func (m *Middleware) OnlyAuthorized() fiber.Handler {
+func (m *middleware) OnlyAuthorized() fiber.Handler {
 	return jwtware.New(jwtware.Config{
 		SigningKey:  jwtware.SigningKey{Key: m.cfg.Jwt.SecretKey},
 		TokenLookup: "cookie:accessToken",
@@ -34,7 +34,7 @@ func (m *Middleware) OnlyAuthorized() fiber.Handler {
 	})
 }
 
-func (m *Middleware) OnlyUnAuthorized() fiber.Handler {
+func (m *middleware) OnlyUnAuthorized() fiber.Handler {
 	return jwtware.New(jwtware.Config{
 		SigningKey:  jwtware.SigningKey{Key: m.cfg.Jwt.SecretKey},
 		TokenLookup: "cookie:accessToken",

@@ -17,7 +17,7 @@ var (
 	)
 )
 
-type AuthSvc struct {
+type authSvc struct {
 	authRepo  types.AuthRepo
 	usersRepo types.UsersRepo
 	cfg       *config.Config
@@ -28,14 +28,14 @@ func NewAuthSvc(
 	usersRepo types.UsersRepo,
 	cfg *config.Config,
 ) types.AuthSvc {
-	return &AuthSvc{
+	return &authSvc{
 		authRepo:  authRepo,
 		usersRepo: usersRepo,
 		cfg:       cfg,
 	}
 }
 
-func (s *AuthSvc) SignUp(username, email, password string) (types.Passport, error) {
+func (s *authSvc) SignUp(username, email, password string) (types.Passport, error) {
 	hashedPassword, err := utils.Hash(password)
 	if err != nil {
 		return types.Passport{}, err
@@ -48,7 +48,7 @@ func (s *AuthSvc) SignUp(username, email, password string) (types.Passport, erro
 	return s.generatePassport(user)
 }
 
-func (s *AuthSvc) SignIn(email, password string) (types.Passport, error) {
+func (s *authSvc) SignIn(email, password string) (types.Passport, error) {
 	if password == "" {
 		return types.Passport{}, ErrInvalidEmailOrPassword
 	}
@@ -71,11 +71,11 @@ func (s *AuthSvc) SignIn(email, password string) (types.Passport, error) {
 	})
 }
 
-func (s *AuthSvc) SignOut(tokenId int) error {
+func (s *authSvc) SignOut(tokenId int) error {
 	return s.authRepo.DeleteToken(tokenId)
 }
 
-func (s *AuthSvc) UpdateTokens(tokenId int, refreshToken string) (types.Token, error) {
+func (s *authSvc) UpdateTokens(tokenId int, refreshToken string) (types.Token, error) {
 	has, err := s.authRepo.HasToken(tokenId, refreshToken)
 	if err != nil {
 		return types.Token{}, err
@@ -120,7 +120,7 @@ func (s *AuthSvc) UpdateTokens(tokenId int, refreshToken string) (types.Token, e
 	}, nil
 }
 
-func (s *AuthSvc) generatePassport(user types.User) (types.Passport, error) {
+func (s *authSvc) generatePassport(user types.User) (types.Passport, error) {
 	payload := types.Payload{
 		UserId: user.Id,
 		Email:  user.Email,

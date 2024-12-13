@@ -9,7 +9,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type UsersHandler struct {
+type usersHandler struct {
 	usersSvc types.UsersSvc
 }
 
@@ -18,14 +18,14 @@ func InitUsersHandler(
 	mid types.Middleware,
 	usersSvc types.UsersSvc,
 ) {
-	handler := &UsersHandler{
+	handler := &usersHandler{
 		usersSvc: usersSvc,
 	}
 
 	router.Put("/", mid.OnlyAuthorized(), handler.UpdateUser)
 }
 
-func (h *UsersHandler) UpdateUser(c *fiber.Ctx) error {
+func (h *usersHandler) UpdateUser(c *fiber.Ctx) error {
 	payload, ok := utils.GetPayload(c)
 	if !ok {
 		utils.DeleteTokenCookies(c)

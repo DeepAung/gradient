@@ -14,17 +14,17 @@ var (
 	ErrEmailUnique    = fiber.NewError(fiber.StatusBadRequest, "email already exist")
 )
 
-type UsersRepo struct {
+type usersRepo struct {
 	db *sqlx.DB
 }
 
 func NewUsersRepo(db *sqlx.DB) types.UsersRepo {
-	return &UsersRepo{
+	return &usersRepo{
 		db: db,
 	}
 }
 
-func (r *UsersRepo) CreateUser(username, email, hashedPassword string) (types.User, error) {
+func (r *usersRepo) CreateUser(username, email, hashedPassword string) (types.User, error) {
 	var user types.User
 	err := r.db.Get(&user,
 		`INSERT INTO users (username, email, password)
@@ -46,7 +46,7 @@ func (r *UsersRepo) CreateUser(username, email, hashedPassword string) (types.Us
 	}
 }
 
-func (r *UsersRepo) FindOneUserById(id int) (types.User, error) {
+func (r *usersRepo) FindOneUserById(id int) (types.User, error) {
 	var user types.User
 	err := r.db.Get(
 		&user,
@@ -60,7 +60,7 @@ func (r *UsersRepo) FindOneUserById(id int) (types.User, error) {
 	return user, err
 }
 
-func (r *UsersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWithPassword, error) {
+func (r *usersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWithPassword, error) {
 	var user types.UserWithPassword
 	err := r.db.Get(
 		&user,
@@ -74,7 +74,7 @@ func (r *UsersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWith
 	return user, err
 }
 
-func (r *UsersRepo) FindOneUserPasswordById(id int) (string, error) {
+func (r *usersRepo) FindOneUserPasswordById(id int) (string, error) {
 	var hashedPassword string
 	err := r.db.Get(&hashedPassword, `SELECT password FROM users WHERE id = $1`, id)
 	if err == sql.ErrNoRows {
@@ -83,7 +83,7 @@ func (r *UsersRepo) FindOneUserPasswordById(id int) (string, error) {
 	return hashedPassword, err
 }
 
-func (r *UsersRepo) UpdateUser(id int, req types.UpdateUserReq) error {
+func (r *usersRepo) UpdateUser(id int, req types.UpdateUserReq) error {
 	result, err := r.db.Exec(`
 		UPDATE users
 		SET username = $1,
@@ -105,7 +105,7 @@ func (r *UsersRepo) UpdateUser(id int, req types.UpdateUserReq) error {
 	return nil
 }
 
-func (r *UsersRepo) UpdateUserPassword(id int, hashedPassword string) error {
+func (r *usersRepo) UpdateUserPassword(id int, hashedPassword string) error {
 	result, err := r.db.Exec(`UPDATE users SET password = $1 WHERE id = $2;`, hashedPassword, id)
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func (r *UsersRepo) UpdateUserPassword(id int, hashedPassword string) error {
 	return nil
 }
 
-func (r *UsersRepo) DeleteUser(id int) error {
+func (r *usersRepo) DeleteUser(id int) error {
 	result, err := r.db.Exec(`DELETE FROM users WHERE id = $1;`, id)
 	if err != nil {
 		return err

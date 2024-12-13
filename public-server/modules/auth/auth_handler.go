@@ -15,13 +15,13 @@ var (
 	ErrInvalidConfirmPassword = errors.New("password is not the same")
 )
 
-type AuthHandler struct {
+type authHandler struct {
 	svc types.AuthSvc
 	cfg *config.Config
 }
 
 func InitAuthHandler(router fiber.Router, svc types.AuthSvc, cfg *config.Config) {
-	handler := &AuthHandler{
+	handler := &authHandler{
 		svc: svc,
 		cfg: cfg,
 	}
@@ -31,7 +31,7 @@ func InitAuthHandler(router fiber.Router, svc types.AuthSvc, cfg *config.Config)
 	router.Post("/signout", handler.SignOut)
 }
 
-func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
+func (h *authHandler) SignIn(c *fiber.Ctx) error {
 	var dto types.SignInDTO
 	if err := c.BodyParser(&dto); err != nil {
 		c.Response().Header.Add("HX-Retarget", "#error-text")
@@ -55,7 +55,7 @@ func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
 	return nil
 }
 
-func (h *AuthHandler) SignUp(c *fiber.Ctx) error {
+func (h *authHandler) SignUp(c *fiber.Ctx) error {
 	var dto types.SignUpDTO
 	if err := c.BodyParser(&dto); err != nil {
 		c.Response().Header.Add("HX-Retarget", "#error-text")
@@ -83,7 +83,7 @@ func (h *AuthHandler) SignUp(c *fiber.Ctx) error {
 	return nil
 }
 
-func (h *AuthHandler) SignOut(c *fiber.Ctx) error {
+func (h *authHandler) SignOut(c *fiber.Ctx) error {
 	tokenIdStr := c.Cookies("tokenId", "")
 	if tokenIdStr == "" {
 		utils.DeleteTokenCookies(c)

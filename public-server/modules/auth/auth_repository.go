@@ -10,17 +10,17 @@ import (
 
 var ErrTokenNotFound = fiber.NewError(fiber.StatusBadRequest, "token not found")
 
-type AuthRepo struct {
+type authRepo struct {
 	db *sqlx.DB
 }
 
 func NewAuthRepo(db *sqlx.DB) types.AuthRepo {
-	return &AuthRepo{
+	return &authRepo{
 		db: db,
 	}
 }
 
-func (r *AuthRepo) CreateToken(accessToken, refreshToken string) (types.Token, error) {
+func (r *authRepo) CreateToken(accessToken, refreshToken string) (types.Token, error) {
 	var token types.Token
 	err := r.db.Get(&token,
 		`INSERT INTO tokens (access_token, refresh_token)
@@ -35,7 +35,7 @@ func (r *AuthRepo) CreateToken(accessToken, refreshToken string) (types.Token, e
 	return token, err
 }
 
-func (r *AuthRepo) DeleteToken(tokenId int) error {
+func (r *authRepo) DeleteToken(tokenId int) error {
 	result, err := r.db.Exec(`DELETE FROM tokens WHERE tokens.id = $1;`, tokenId)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (r *AuthRepo) DeleteToken(tokenId int) error {
 	return nil
 }
 
-func (r *AuthRepo) HasToken(id int, refreshToken string) (bool, error) {
+func (r *authRepo) HasToken(id int, refreshToken string) (bool, error) {
 	var tmp int
 	err := r.db.Get(&tmp,
 		`SELECT 1 FROM tokens WHERE tokens.id = $1 AND tokens.refresh_token = $2;`,
@@ -62,7 +62,7 @@ func (r *AuthRepo) HasToken(id int, refreshToken string) (bool, error) {
 	return tmp == 1, err
 }
 
-func (r *AuthRepo) UpdateTokens(id int, newAccessToken, newRefreshToken string) error {
+func (r *authRepo) UpdateTokens(id int, newAccessToken, newRefreshToken string) error {
 	result, err := r.db.Exec(
 		`UPDATE tokens
 		SET access_token = $1, refresh_token = $2

@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ViewsHandler struct {
+type viewsHandler struct {
 	usersSvc types.UsersSvc
 	tasksSvc types.TasksSvc
 }
@@ -18,7 +18,7 @@ func InitViewsHandler(
 	usersSvc types.UsersSvc,
 	tasksSvc types.TasksSvc,
 ) {
-	handler := &ViewsHandler{
+	handler := &viewsHandler{
 		usersSvc: usersSvc,
 		tasksSvc: tasksSvc,
 	}
@@ -30,19 +30,19 @@ func InitViewsHandler(
 	router.Get("/profile", mid.OnlyAuthorized(), handler.Profile)
 }
 
-func (h *ViewsHandler) Welcome(c *fiber.Ctx) error {
+func (h *viewsHandler) Welcome(c *fiber.Ctx) error {
 	return utils.Render(c, pages.Welcome())
 }
 
-func (h *ViewsHandler) SignIn(c *fiber.Ctx) error {
+func (h *viewsHandler) SignIn(c *fiber.Ctx) error {
 	return utils.Render(c, pages.SignIn())
 }
 
-func (h *ViewsHandler) SignUp(c *fiber.Ctx) error {
+func (h *viewsHandler) SignUp(c *fiber.Ctx) error {
 	return utils.Render(c, pages.SignUp())
 }
 
-func (h *ViewsHandler) Home(c *fiber.Ctx) error {
+func (h *viewsHandler) Home(c *fiber.Ctx) error {
 	payload, ok := utils.GetPayload(c)
 	if !ok {
 		utils.DeleteTokenCookies(c)
@@ -58,7 +58,7 @@ func (h *ViewsHandler) Home(c *fiber.Ctx) error {
 	return utils.Render(c, pages.Home(user))
 }
 
-func (h *ViewsHandler) Profile(c *fiber.Ctx) error {
+func (h *viewsHandler) Profile(c *fiber.Ctx) error {
 	payload, ok := utils.GetPayload(c)
 	if !ok {
 		utils.DeleteTokenCookies(c)

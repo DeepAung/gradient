@@ -16,21 +16,21 @@ var (
 	ErrInvalidResultPercent = fiber.NewError(fiber.StatusBadRequest, "invalid result percent")
 )
 
-type SubmissionRepo struct {
+type submissionRepo struct {
 	db *sqlx.DB
 }
 
 func NewSubmissionRepo(db *sqlx.DB) types.SubmissionsRepo {
-	return &SubmissionRepo{
+	return &submissionRepo{
 		db: db,
 	}
 }
 
-func (r *SubmissionRepo) CreateSubmission(req types.CreateSubmissionReq) (int, error) {
+func (r *submissionRepo) CreateSubmission(req types.CreateSubmissionReq) (int, error) {
 	return r.createSubmissionWithDB(r.db, req)
 }
 
-func (r *SubmissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) error {
+func (r *submissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (r *SubmissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) erro
 	return nil
 }
 
-func (r *SubmissionRepo) createSubmissionWithDB(
+func (r *submissionRepo) createSubmissionWithDB(
 	db sqlx.Queryer,
 	req types.CreateSubmissionReq,
 ) (int, error) {
@@ -82,7 +82,7 @@ func (r *SubmissionRepo) createSubmissionWithDB(
 	return id, nil
 }
 
-func (r *SubmissionRepo) FindOneSubmission(id int) (types.Submission, error) {
+func (r *submissionRepo) FindOneSubmission(id int) (types.Submission, error) {
 	var submission types.Submission
 	err := r.db.Get(&submission,
 		`SELECT id, user_id, task_id, code, language, results, result_percent 
@@ -95,7 +95,7 @@ func (r *SubmissionRepo) FindOneSubmission(id int) (types.Submission, error) {
 	return submission, err
 }
 
-func (r *SubmissionRepo) FindManySubmissions(
+func (r *submissionRepo) FindManySubmissions(
 	req types.GetSubmissionsReq,
 ) ([]types.Submission, error) {
 	var submissions []types.Submission
