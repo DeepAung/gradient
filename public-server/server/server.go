@@ -56,20 +56,17 @@ func (s *server) setupRoutes() {
 
 	apiGroup := s.app.Group("/api")
 
-	usersGroup := apiGroup.Group("/users")
 	usersRepo := users.NewUsersRepo(s.db)
 	usersSvc := users.NewUsersSvc(usersRepo, s.storer, s.cfg)
-	users.InitUsersHandler(usersGroup, s.mid, usersSvc)
+	users.InitUsersHandler(apiGroup, s.mid, usersSvc)
 
-	tasksGroup := apiGroup.Group("/tasks")
 	tasksRepo := tasks.NewTasksRepo(s.db)
 	tasksSvc := tasks.NewTasksSvc(tasksRepo)
-	tasks.InitTasksHandler(tasksGroup, s.mid, tasksSvc)
+	tasks.InitTasksHandler(apiGroup, s.mid, tasksSvc)
 
-	authGroup := apiGroup.Group("/auth")
 	authRepo := auth.NewAuthRepo(s.db)
 	authSvc := auth.NewAuthSvc(authRepo, usersRepo, s.cfg)
-	auth.InitAuthHandler(authGroup, authSvc, s.cfg)
+	auth.InitAuthHandler(apiGroup, authSvc, s.cfg)
 
 	views.InitViewsHandler(s.app, s.mid, usersSvc, tasksSvc)
 }

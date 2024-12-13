@@ -7,6 +7,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+var ErrInvalidPage = fiber.NewError(fiber.StatusBadRequest, "invalid page number")
+
 const itemsPerPage = 50
 
 type tasksHandler struct {
@@ -18,7 +20,8 @@ func InitTasksHandler(router fiber.Router, mid types.Middleware, tasksSvc types.
 		tasksSvc: tasksSvc,
 	}
 
-	router.Post("/", mid.OnlyAuthorized(), handler.GetTasks)
+	tasksGroup := router.Group("/tasks")
+	tasksGroup.Post("/", mid.OnlyAuthorized(), handler.GetTasks)
 }
 
 func (h *tasksHandler) GetTasks(c *fiber.Ctx) error {
@@ -35,6 +38,9 @@ func (h *tasksHandler) GetTasks(c *fiber.Ctx) error {
 	}
 	if err := utils.Validate(&dto); err != nil {
 		return utils.RenderAlert(c, components.AlertError(err.Error()))
+	}
+	if dto.Page < 1 {
+		return utils.RenderAlert(c, components.AlertError(ErrInvalidPage.Error()))
 	}
 
 	startIndex := itemsPerPage * (dto.Page - 1)

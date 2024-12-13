@@ -26,9 +26,10 @@ func InitAuthHandler(router fiber.Router, svc types.AuthSvc, cfg *config.Config)
 		cfg: cfg,
 	}
 
-	router.Post("/signin", handler.SignIn)
-	router.Post("/signup", handler.SignUp)
-	router.Post("/signout", handler.SignOut)
+	authGroup := router.Group("/auth")
+	authGroup.Post("/signin", handler.SignIn)
+	authGroup.Post("/signup", handler.SignUp)
+	authGroup.Post("/signout", handler.SignOut)
 }
 
 func (h *authHandler) SignIn(c *fiber.Ctx) error {

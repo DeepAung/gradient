@@ -22,7 +22,8 @@ func InitUsersHandler(
 		usersSvc: usersSvc,
 	}
 
-	router.Put("/", mid.OnlyAuthorized(), handler.UpdateUser)
+	usersGroup := router.Group("/users")
+	usersGroup.Put("/", mid.OnlyAuthorized(), handler.UpdateUser)
 }
 
 func (h *usersHandler) UpdateUser(c *fiber.Ctx) error {
