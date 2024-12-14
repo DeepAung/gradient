@@ -68,7 +68,7 @@ func (h *viewsHandler) Profile(c *fiber.Ctx) error {
 		return c.Redirect("/signin", fiber.StatusFound)
 	}
 
-	user, err := h.usersSvc.GetUser(payload.UserId + 10)
+	user, err := h.usersSvc.GetUser(payload.UserId)
 	if err != nil {
 		_, msg := utils.ParseError(err)
 		return utils.Render(c, pages.Error(msg, "/home"))
