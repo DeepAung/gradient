@@ -124,52 +124,62 @@ func TestCheckContent(t *testing.T) {
 	}
 }
 
-func TestCheckContentRandomInput(t *testing.T) {
+func TestCheckContentEqual(t *testing.T) {
 	assertion := func(val int) bool {
-		s1 := generateRandomSpace(1024) + generateRandomString(
-			rand.Intn(1024),
-		) + generateRandomSpace(1024)
-		s2 := generateRandomSpace(1024) + generateRandomString(
-			rand.Intn(100000),
-		) + generateRandomSpace(1024)
+		str := generateRandomSpace(1024) +
+			generateRandomString(rand.Intn(100000)) +
+			generateRandomSpace(1024)
+		reader := strings.NewReader(str)
+		ctx := context.Background()
 
-		c := NewCodeChecker()
-		check, err := c.CheckContent(
-			context.Background(),
-			strings.NewReader(s1),
-			strings.NewReader(s2),
-		)
+		checker := NewCodeChecker()
+		check, err := checker.CheckContent(ctx, reader, reader)
 		if err != nil {
 			return false
 		}
 
-		check2 := checkContentUsingStringsPackage(s1, s2)
+		simpleChecker := NewSimpleCodeChecker()
+		simpleCheck, err := simpleChecker.CheckContent(ctx, reader, reader)
+		if err != nil {
+			return false
+		}
 
-		return check == check2
+		return check == simpleCheck
 	}
+
 	if err := quick.Check(assertion, nil); err != nil {
 		t.Fatal("failed")
 	}
+}
 
-	assertion2 := func(val int) bool {
-		s := generateRandomSpace(1024) + generateRandomString(
-			rand.Intn(1024),
-		) + generateRandomSpace(1024)
-		c := NewCodeChecker()
-		check, err := c.CheckContent(
-			context.Background(),
-			strings.NewReader(s),
-			strings.NewReader(s),
-		)
+func TestCheckContentNotEqual(t *testing.T) {
+	assertion := func(val int) bool {
+		str1 := generateRandomSpace(rand.Intn(1024)) +
+			generateRandomString(rand.Intn(100000)) +
+			generateRandomSpace(rand.Intn(1024))
+		str2 := generateRandomSpace(rand.Intn(1024)) +
+			generateRandomString(rand.Intn(100000)) +
+			generateRandomSpace(rand.Intn(1024))
+		reader1 := strings.NewReader(str1)
+		reader2 := strings.NewReader(str2)
+		ctx := context.Background()
+
+		checker := NewCodeChecker()
+		check, err := checker.CheckContent(ctx, reader1, reader2)
 		if err != nil {
 			return false
 		}
 
-		check2 := checkContentUsingStringsPackage(s, s)
+		simpleChecker := NewSimpleCodeChecker()
+		simpleCheck, err := simpleChecker.CheckContent(ctx, reader1, reader2)
+		if err != nil {
+			return false
+		}
 
-		return check == check2
+		return check == simpleCheck
 	}
-	if err := quick.Check(assertion2, nil); err != nil {
+
+	if err := quick.Check(assertion, nil); err != nil {
 		t.Fatal("failed")
 	}
 }
@@ -180,7 +190,7 @@ func checkContentUsingStringsPackage(s1 string, s2 string) bool {
 
 var (
 	letterBytes = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 \n")
-	spaceBytes  = []byte("\n ") // from unicode.IsSpace()
+	spaceBytes  = []byte("\t\n\v\f\r ") // from unicode.IsSpace()
 )
 
 func generateRandomString(length int) string {

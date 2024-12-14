@@ -10,7 +10,7 @@ import (
 const maxReadByte = 512
 
 type CodeChecker interface {
-	Check(ctx context.Context, filename1, filename2 string) (bool, error)
+	CheckFile(ctx context.Context, filename1, filename2 string) (bool, error)
 	CheckContent(ctx context.Context, reader1, reader2 io.Reader) (bool, error)
 }
 
@@ -20,7 +20,7 @@ func NewCodeChecker() CodeChecker {
 	return codeChecker{}
 }
 
-func (c codeChecker) Check(ctx context.Context, filename1, filename2 string) (bool, error) {
+func (c codeChecker) CheckFile(ctx context.Context, filename1, filename2 string) (bool, error) {
 	file1, err := os.Open(filename1)
 	if err != nil {
 		return false, err

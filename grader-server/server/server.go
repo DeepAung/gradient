@@ -79,7 +79,7 @@ func (s *graderServer) Grade(
 
 		outputFilename := fmt.Sprintf("%s/%02d.out", testcasesDir, i)
 		resultFilename := fmt.Sprintf("%s/%02d.result", submissionDir, i)
-		ok, err := checker.Check(ctx, outputFilename, resultFilename)
+		ok, err := checker.CheckFile(ctx, outputFilename, resultFilename)
 		if err != nil {
 			return err
 		}
