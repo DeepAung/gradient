@@ -24,6 +24,7 @@ func InitUsersHandler(
 
 	usersGroup := router.Group("/users")
 	usersGroup.Put("/", mid.OnlyAuthorized(), handler.UpdateUser)
+	usersGroup.Delete("/", mid.OnlyAuthorized(), handler.DeleteUser)
 }
 
 func (h *usersHandler) UpdateUser(c *fiber.Ctx) error {
@@ -85,4 +86,21 @@ func (h *usersHandler) UpdateUser(c *fiber.Ctx) error {
 		components.AlertSuccess("user information updated"),
 		components.OOBWrap("innerHTML:#error-text", components.Text("")),
 	))
+}
+
+func (h *usersHandler) DeleteUser(c *fiber.Ctx) error {
+	payload, ok := utils.GetPayload(c)
+	if !ok {
+		utils.DeleteTokenCookies(c)
+		return c.Redirect("/signin", fiber.StatusFound)
+	}
+
+	if err := h.usersSvc.DeleteUser(payload.UserId); err != nil {
+		_, msg := utils.ParseError(err)
+		c.Response().Header.Add("HX-Retarget", "#error-text")
+		return c.SendString(msg)
+	}
+
+	c.Response().Header.Add("HX-Redirect", "/signin")
+	return nil
 }

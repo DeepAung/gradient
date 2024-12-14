@@ -15,7 +15,7 @@ type TasksSvc interface {
 
 type TasksRepo interface {
 	FindOneTask(userId, taskId int) (Task, error)
-	FindOneTaskTestcaseCount(taskId int) (int, error)
+	FindOneTaskTestcaseCount(taskId int) (int, error) // TODO: write test
 	// [startIndex, stopIndex)
 	FindManyTasks(
 		userId int,
