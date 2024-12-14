@@ -8,11 +8,11 @@ import (
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/database"
-	"github.com/DeepAung/gradient/public-server/modules/graderclient"
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/modules/users"
 	"github.com/DeepAung/gradient/public-server/pkg/asserts"
+	"github.com/DeepAung/gradient/public-server/pkg/graderclient"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -22,7 +22,7 @@ var (
 	cfg               *config.Config
 	db                *sqlx.DB
 	client            proto.GraderClient
-	repo              types.SubmissionsRepo
+	submissionsRepo   types.SubmissionsRepo
 	svc               types.SubmissionsSvc
 
 	createReq = types.CreateSubmissionReq{
@@ -122,9 +122,10 @@ func init() {
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
-	repo = NewSubmissionRepo(db)
+	submissionsRepo = NewSubmissionRepo(db)
+	tasksRepo := tasks.NewTasksRepo(db)
 	client = graderclient.NewGraderClientMock(10)
-	svc = NewSubmissionSvc(repo, client)
+	svc = NewSubmissionSvc(submissionsRepo, tasksRepo, client)
 }
 
 func TestGetSubmission(t *testing.T) {

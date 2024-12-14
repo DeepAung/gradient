@@ -79,7 +79,7 @@ func (s *server) setupRoutes() {
 	tasks.InitTasksHandler(apiGroup, s.mid, tasksSvc)
 
 	submissionsRepo := submissions.NewSubmissionRepo(s.db)
-	submissionsSvc := submissions.NewSubmissionSvc(submissionsRepo, s.graderClient)
+	submissionsSvc := submissions.NewSubmissionSvc(submissionsRepo, tasksRepo, s.graderClient)
 	submissions.InitSubmissionsHandler(apiGroup, s.mid, submissionsSvc, tasksSvc)
 
 	views.InitViewsHandler(s.app, s.mid, usersSvc, tasksSvc)

@@ -85,20 +85,11 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 	}
 	codeFile.Close()
 
-	// Get testcase count
-	testcaseCount, err := h.tasksSvc.GetTestcaseCount(taskId)
-	if err != nil {
-		c.Response().Header.Add("HX-Retarget", "#error-text")
-		_, msg := utils.ParseError(err)
-		return c.SendString(msg)
-	}
-
-	dto := types.CreateSubmissionDTO{
-		UserId:        payload.UserId,
-		TaskId:        taskId,
-		Code:          string(codeBytes),
-		Language:      language,
-		TestcaseCount: testcaseCount,
+	dto := types.CreateSubmissionReq{
+		UserId:   payload.UserId,
+		TaskId:   taskId,
+		Code:     string(codeBytes),
+		Language: language,
 	}
 
 	if err := utils.Validate(&dto); err != nil {
@@ -106,15 +97,7 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 		return c.SendString(err.Error())
 	}
 
-	resultCh, createCh, err := h.submissionsSvc.SubmitCode(
-		types.CreateSubmissionReq{
-			UserId:   dto.UserId,
-			TaskId:   dto.TaskId,
-			Code:     dto.Code,
-			Language: dto.Language,
-		},
-		dto.TestcaseCount,
-	)
+	resultCh, createCh, err := h.submissionsSvc.SubmitCode(dto)
 	if err != nil {
 		_, msg := utils.ParseError(err)
 		return c.SendString(msg)

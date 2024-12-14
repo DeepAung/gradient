@@ -2,7 +2,6 @@ package types
 
 type TasksSvc interface {
 	GetTask(userId, taskId int) (Task, error)
-	GetTestcaseCount(taskId int) (int, error)
 	GetTasks(
 		userId int,
 		search string,

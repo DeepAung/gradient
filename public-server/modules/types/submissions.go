@@ -5,10 +5,7 @@ import (
 )
 
 type SubmissionsSvc interface {
-	SubmitCode(
-		req CreateSubmissionReq,
-		testcaseCount int,
-	) (<-chan proto.ResultType, <-chan CreateSubmissionRes, error)
+	SubmitCode(req CreateSubmissionReq) (<-chan proto.ResultType, <-chan CreateSubmissionRes, error)
 	GetSubmission(id int) (Submission, error)
 	GetSubmissions(req GetSubmissionsReq) ([]Submission, error)
 }
@@ -30,18 +27,10 @@ type Submission struct {
 	ResultPercent float32 `db:"result_percent"`
 }
 
-type CreateSubmissionDTO struct {
-	UserId        int    `validate:"required"`
-	TaskId        int    `validate:"required"`
-	Code          string `validate:"required"`
-	Language      proto.LanguageType
-	TestcaseCount int
-}
-
 type CreateSubmissionReq struct {
-	UserId   int
-	TaskId   int
-	Code     string
+	UserId   int    `validate:"required"`
+	TaskId   int    `validate:"required"`
+	Code     string `validate:"required"`
 	Language proto.LanguageType
 
 	// assign after complete submiting code

@@ -16,10 +16,6 @@ func (s *tasksSvc) GetTask(userId, taskId int) (types.Task, error) {
 	return s.repo.FindOneTask(userId, taskId)
 }
 
-func (s *tasksSvc) GetTestcaseCount(taskId int) (int, error) {
-	return s.repo.FindOneTaskTestcaseCount(taskId)
-}
-
 func (s *tasksSvc) GetTasks(
 	userId int,
 	search string,

@@ -96,25 +96,25 @@ func TestUpdateTokens(t *testing.T) {
 	asserts.EqualError(t, err, nil)
 
 	t.Run("invalid token id", func(t *testing.T) {
-		token, err := myAuthSvc.UpdateTokens(1000, passport.Token.RefreshToken)
+		token, _, err := myAuthSvc.UpdateTokens(1000, passport.Token.RefreshToken)
 		asserts.EqualError(t, err, ErrInvalidRefreshTokenOrTokenNotFound)
 		asserts.Equal(t, "token", token, types.Token{})
 	})
 
 	t.Run("invalid refresh token", func(t *testing.T) {
-		token, err := myAuthSvc.UpdateTokens(passport.Token.Id, "invalid refresh token")
+		token, _, err := myAuthSvc.UpdateTokens(passport.Token.Id, "invalid refresh token")
 		asserts.EqualError(t, err, ErrInvalidRefreshTokenOrTokenNotFound)
 		asserts.Equal(t, "token", token, types.Token{})
 	})
 
 	t.Run("empty refresh token", func(t *testing.T) {
-		token, err := myAuthSvc.UpdateTokens(passport.Token.Id, "")
+		token, _, err := myAuthSvc.UpdateTokens(passport.Token.Id, "")
 		asserts.EqualError(t, err, ErrInvalidRefreshTokenOrTokenNotFound)
 		asserts.Equal(t, "token", token, types.Token{})
 	})
 
 	t.Run("normal update tokens", func(t *testing.T) {
-		token, err := myAuthSvc.UpdateTokens(passport.Token.Id, passport.Token.RefreshToken)
+		token, _, err := myAuthSvc.UpdateTokens(passport.Token.Id, passport.Token.RefreshToken)
 		asserts.EqualError(t, err, nil)
 
 		asserts.Equal(t, "token id", token.Id, passport.Token.Id)

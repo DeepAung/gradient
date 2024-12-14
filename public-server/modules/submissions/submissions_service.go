@@ -10,17 +10,20 @@ import (
 )
 
 type submissionSvc struct {
-	repo         types.SubmissionsRepo
-	graderClient proto.GraderClient
+	submissionsRepo types.SubmissionsRepo
+	tasksRepo       types.TasksRepo
+	graderClient    proto.GraderClient
 }
 
 func NewSubmissionSvc(
-	repo types.SubmissionsRepo,
+	submissionsRepo types.SubmissionsRepo,
+	tasksRepo types.TasksRepo,
 	graderClient proto.GraderClient,
 ) types.SubmissionsSvc {
 	return &submissionSvc{
-		repo:         repo,
-		graderClient: graderClient,
+		submissionsRepo: submissionsRepo,
+		tasksRepo:       tasksRepo,
+		graderClient:    graderClient,
 	}
 }
 
@@ -29,9 +32,8 @@ func NewSubmissionSvc(
 // 3. create submission (return by create channel)
 func (s *submissionSvc) SubmitCode(
 	req types.CreateSubmissionReq,
-	testcaseCount int,
 ) (<-chan proto.ResultType, <-chan types.CreateSubmissionRes, error) {
-	if err := s.repo.CanCreateSubmission(req); err != nil {
+	if err := s.submissionsRepo.CanCreateSubmission(req); err != nil {
 		return nil, nil, err
 	}
 
@@ -43,6 +45,11 @@ func (s *submissionSvc) SubmitCode(
 	})
 	if err != nil {
 		fmt.Println("gcp error: ", err.Error())
+		return nil, nil, err
+	}
+
+	testcaseCount, err := s.tasksRepo.FindOneTaskTestcaseCount(req.TaskId)
+	if err != nil {
 		return nil, nil, err
 	}
 
@@ -76,7 +83,7 @@ func (s *submissionSvc) SubmitCode(
 
 		req.ResultPercent = float32(passCount) / float32(totalCount)
 
-		id, err := s.repo.CreateSubmission(req)
+		id, err := s.submissionsRepo.CreateSubmission(req)
 		createCh <- types.CreateSubmissionRes{Id: id, Err: err}
 		close(createCh)
 	}()
@@ -85,9 +92,9 @@ func (s *submissionSvc) SubmitCode(
 }
 
 func (s *submissionSvc) GetSubmission(id int) (types.Submission, error) {
-	return s.repo.FindOneSubmission(id)
+	return s.submissionsRepo.FindOneSubmission(id)
 }
 
 func (s *submissionSvc) GetSubmissions(req types.GetSubmissionsReq) ([]types.Submission, error) {
-	return s.repo.FindManySubmissions(req)
+	return s.submissionsRepo.FindManySubmissions(req)
 }
