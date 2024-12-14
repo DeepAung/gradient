@@ -36,6 +36,21 @@ func ProtoLanguageToString(language proto.LanguageType) (string, bool) {
 	}
 }
 
+func ProtoLanguageToExtension(language proto.LanguageType) (string, bool) {
+	switch language {
+	case proto.LanguageType_CPP:
+		return ".cpp", true
+	case proto.LanguageType_C:
+		return ".c", true
+	case proto.LanguageType_GO:
+		return ".go", true
+	case proto.LanguageType_PYTHON:
+		return ".py", true
+	default:
+		return "", false
+	}
+}
+
 func StringToProtoLanguage(str string) (proto.LanguageType, bool) {
 	switch str {
 	case "cpp":

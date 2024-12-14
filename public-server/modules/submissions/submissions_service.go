@@ -38,10 +38,9 @@ func (s *submissionSvc) SubmitCode(
 	}
 
 	stream, err := s.graderClient.Grade(context.Background(), &proto.Input{
-		Code:         req.Code,
-		CodeFilename: "", // TODO:
-		Language:     req.Language,
-		TaskId:       uint32(req.TaskId),
+		Code:     req.Code,
+		Language: req.Language,
+		TaskId:   uint32(req.TaskId),
 	})
 	if err != nil {
 		fmt.Println("gcp error: ", err.Error())
@@ -66,6 +65,7 @@ func (s *submissionSvc) SubmitCode(
 				break
 			} else if err != nil {
 				resVar = proto.ResultType_COMPILATION_ERROR
+				break
 			} else {
 				resVar = result.Result
 			}

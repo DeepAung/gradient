@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"github.com/DeepAung/gradient/grader-server/pkg/runner"
 	"github.com/DeepAung/gradient/grader-server/pkg/testcasepuller"
 	"github.com/DeepAung/gradient/grader-server/proto"
+	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/google/uuid"
 	grpc "google.golang.org/grpc"
 )
@@ -31,26 +33,37 @@ func (s *graderServer) Grade(
 	stream grpc.ServerStreamingServer[proto.Result],
 ) error {
 	// Pull testcases from taskId
+	log.Println("Grader: start Grade() function")
 	testcasesDir := fmt.Sprintf("tmp/testcases/%d", input.TaskId)
 	testcasePuller := testcasepuller.NewMockTestcasePuller()
 	n, err := testcasePuller.Pull(int(input.TaskId), testcasesDir)
 	if err != nil {
+		log.Println("Grader: err testcase Pull: ", err.Error())
 		return err
 	}
+	log.Println("Grader: testcase pulled")
 
 	// Create code file/folder
 	submissionId := uuid.NewString()
 	submissionDir := fmt.Sprintf("tmp/submissions/%s", submissionId)
-	codeFilename := fmt.Sprintf("tmp/submissions/%s/%s", submissionId, input.CodeFilename)
+	codeExt, ok := types.ProtoLanguageToExtension(input.Language)
+	if !ok {
+		return errors.New("invalid language")
+	}
+
+	codeFilename := fmt.Sprintf("tmp/submissions/%s/%s", submissionId, "code"+codeExt)
 	if err := os.MkdirAll(submissionDir, os.ModePerm); err != nil {
+		log.Println("Grader: err os.MkdirAll", err.Error())
 		return err
 	}
 	codeFile, err := os.Create(codeFilename)
 	if err != nil {
+		log.Println("Grader: err os.Create: ", err.Error())
 		return err
 	}
 	codeFile.Write([]byte(input.Code))
 	codeFile.Close()
+	log.Println("Grader: create/write file")
 
 	// Init runner & checker
 	runner, err := runner.NewCodeRunner(input.Language)
@@ -58,6 +71,7 @@ func (s *graderServer) Grade(
 		return err
 	}
 	checker := checker.NewCodeChecker()
+	log.Println("Grader: init runner and checker")
 
 	// Build code
 	ctx := context.Background() // TODO: change to context with timeout
@@ -66,6 +80,7 @@ func (s *graderServer) Grade(
 		stream.Send(&proto.Result{Result: result})
 		return nil
 	}
+	log.Println("Grader: builded")
 
 	// Run and Check code
 	for i := 1; i <= n; i++ {
@@ -89,11 +104,13 @@ func (s *graderServer) Grade(
 			stream.Send(&proto.Result{Result: proto.ResultType_INCORRECT})
 		}
 	}
+	log.Println("Grader: runned")
 
 	// Delete code file/folder
 	if err := os.RemoveAll(submissionDir); err != nil {
 		return err
 	}
+	log.Println("Grader: cleaned")
 
 	return nil
 }

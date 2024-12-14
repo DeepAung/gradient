@@ -25,7 +25,6 @@ enum ResultType {
 
 message Input {
   string code = 1;
-  string codeFilename = 2;
   LanguageType language = 3;
   uint32 taskId = 4;
 }

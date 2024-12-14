@@ -55,10 +55,9 @@ func submitCode(client proto.GraderClient, codeFilename string, language proto.L
 	code := string(b)
 
 	stream, err := client.Grade(context.Background(), &proto.Input{
-		Code:         code,
-		CodeFilename: codeFilename,
-		Language:     language,
-		TaskId:       1,
+		Code:     code,
+		Language: language,
+		TaskId:   1,
 	})
 	if err != nil {
 		log.Fatal("client.Grade: ", err)

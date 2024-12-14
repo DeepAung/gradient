@@ -2,6 +2,7 @@ package submissions
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strconv"
 	"time"
@@ -116,8 +117,7 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 	// 	return c.SendString(createRes.Err.Error())
 	// }
 
-	c.Response().Header.Add("HX-Retarget", "#submission-form")
-	c.Response().Header.Add("HX-Reswap", "afterend")
+	c.Response().Header.Add("HX-Retarget", "#submission-results")
 	return utils.Render(c, components.SubmissionResults())
 }
 
@@ -139,5 +139,6 @@ func (h *submissionsHandler) SendResult(c *websocket.Conn) {
 		components.OOBWrap("beforeend:#submission-results", components.Text(char)).Render(ctx, w)
 	}
 
+	fmt.Println("close channel")
 	c.WriteMessage(websocket.CloseMessage, nil)
 }

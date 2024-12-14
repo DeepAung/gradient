@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"time"
+	"log"
 
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/database"
@@ -10,6 +10,8 @@ import (
 	"github.com/DeepAung/gradient/public-server/pkg/storer"
 	"github.com/DeepAung/gradient/public-server/server"
 	"github.com/gofiber/fiber/v2"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var envPath = flag.String("env", "", "env file")
@@ -23,15 +25,14 @@ func main() {
 
 	storer := storer.NewGcpStorer(cfg)
 
-	// graderClient, conn, err := graderclient.NewGraderClient(
-	// 	cfg.App.Address,
-	// 	grpc.WithTransportCredentials(insecure.NewCredentials()),
-	// )
-	// if err != nil {
-	// 	log.Fatal("init grader client error: ", err.Error())
-	// }
-	// defer conn.Close()
-	graderClient := graderclient.NewGraderClientMock(10, 300*time.Millisecond)
+	graderClient, conn, err := graderclient.NewGraderClient(
+		cfg.App.GraderAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal("graderclient.NewGraderClient: ", err.Error())
+	}
+	defer conn.Close()
 
 	server := server.NewServer(cfg, db, app, storer, graderClient)
 	server.Start()
