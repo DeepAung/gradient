@@ -3,6 +3,7 @@ package users
 import (
 	"fmt"
 	"mime/multipart"
+	"path"
 
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/modules/types"
@@ -51,14 +52,20 @@ func (s *usersSvc) ReplacePicture(
 		}
 	}
 
-	// Upload new picture
-	encryped, err := utils.Encrypt(email, s.cfg.App.AesSecretKey)
+	// Hash picture path(email) and picture filename
+	hashedEmail, err := utils.Hash(email)
 	if err != nil {
 		return "", err
 	}
+	ext := path.Ext(picture.Filename) // e.g. ".png"
+	hashedName, err := utils.Hash(picture.Filename)
+	if err != nil {
+		return "", err
+	}
+	hashedFilename := hashedName + ext
 
-	dest := fmt.Sprintf("users/%s/%s", string(encryped), picture.Filename)
-
+	// Upload new picture
+	dest := fmt.Sprintf("users/%s/%s", hashedEmail, hashedFilename)
 	res, err := s.storer.UploadMultipart(picture, dest, true)
 	if err != nil {
 		return "", err
