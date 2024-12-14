@@ -1,0 +1,38 @@
+package pages
+
+import (
+	"fmt"
+	"github.com/DeepAung/gradient/public-server/modules/types"
+	"github.com/DeepAung/gradient/public-server/views/layouts"
+)
+
+templ TaskDetail(user types.User, task types.Task, languages []string) {
+	@layouts.WithNav(user, nil) {
+		<div class="grid grid-cols-2 p-8 gap-8 h-[80vh]">
+			<embed src="/public/test.pdf" width="100%" height="100%"/>
+			<div>
+				<form id="submission-form" hx-post="/api/submissions" hx-encoding="multipart/form-data" class="space-y-8">
+					<div class="flex items-center gap-3">
+						<h1 class="text-2xl font-black text-neutral">{ task.DisplayName }</h1>
+						<span class="text-neutral-400">{ "(" + task.UrlName + ")" }</span>
+					</div>
+					<p id="error-text" class="text-error font-bold whitespace-pre-line"></p>
+					<div x-data="" class="join w-full">
+						<input id="file-input" x-ref="fileInput" type="file" name="code_file" class="join-item file-input file-input-bordered w-full"/>
+						<input @click="$refs.fileInput.value = ''" type="button" class="join-item btn btn-warning" value="Reset"/>
+					</div>
+					<input type="hidden" name="task_id" value={ fmt.Sprint(task.Id) }/>
+					<div class="flex gap-2">
+						<input type="submit" class="flex-auto btn btn-neutral w-full" value="Submit"/>
+						<select name="language" class="flex-1 select select-bordered">
+							<option selected value={ languages[0] }>{ languages[0] }</option>
+							for _, language := range languages[1:] {
+								<option value={ language }>{ language }</option>
+							}
+						</select>
+					</div>
+				</form>
+			</div>
+		</div>
+	}
+}

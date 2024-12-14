@@ -1,4 +1,4 @@
-package submissions
+package graderclient
 
 import (
 	"context"
@@ -59,7 +59,7 @@ func (s *serverStreamingClientMock) Recv() (*proto.Result, error) {
 	}
 
 	s.testcaseCount--
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 	return &proto.Result{Result: proto.ResultType(rand.Intn(6))}, nil
 }
 func (s *serverStreamingClientMock) Header() (metadata.MD, error) { return nil, nil }

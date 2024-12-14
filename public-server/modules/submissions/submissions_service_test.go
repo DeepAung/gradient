@@ -8,6 +8,7 @@ import (
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/database"
+	"github.com/DeepAung/gradient/public-server/modules/graderclient"
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/modules/users"
@@ -122,7 +123,7 @@ func init() {
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
 	repo = NewSubmissionRepo(db)
-	client = NewGraderClientMock(10)
+	client = graderclient.NewGraderClientMock(10)
 	svc = NewSubmissionSvc(repo, client)
 }
 
@@ -252,12 +253,10 @@ func TestSubmitCodeMockGrader(t *testing.T) {
 		asserts.Equal(t, "submission user id", submission.UserId, req.UserId)
 		asserts.Equal(t, "submission task id", submission.TaskId, req.TaskId)
 		asserts.Equal(t, "submission code", submission.Code, req.Code)
-		asserts.Equal(
-			t,
-			"submission language",
-			submission.Language,
-			types.ProtoLanguageToString(req.Language),
-		)
+
+		language, ok := types.ProtoLanguageToString(req.Language)
+		asserts.Equal(t, "ok", ok, true)
+		asserts.Equal(t, "submission language", submission.Language, language)
 		asserts.Equal(t, "submission result length", len(submission.Results), resultLen)
 	})
 }

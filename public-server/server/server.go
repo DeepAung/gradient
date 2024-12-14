@@ -1,8 +1,10 @@
 package server
 
 import (
+	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/modules/auth"
+	"github.com/DeepAung/gradient/public-server/modules/submissions"
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/modules/users"
@@ -15,11 +17,12 @@ import (
 )
 
 type server struct {
-	cfg    *config.Config
-	db     *sqlx.DB
-	app    *fiber.App
-	mid    types.Middleware
-	storer storer.Storer
+	cfg          *config.Config
+	db           *sqlx.DB
+	app          *fiber.App
+	mid          types.Middleware
+	storer       storer.Storer
+	graderClient proto.GraderClient
 }
 
 func NewServer(
@@ -28,13 +31,15 @@ func NewServer(
 	app *fiber.App,
 	mid types.Middleware,
 	storer storer.Storer,
+	graderClient proto.GraderClient,
 ) *server {
 	return &server{
-		cfg:    cfg,
-		db:     db,
-		app:    app,
-		mid:    mid,
-		storer: storer,
+		cfg:          cfg,
+		db:           db,
+		app:          app,
+		mid:          mid,
+		storer:       storer,
+		graderClient: graderClient,
 	}
 }
 
@@ -60,13 +65,17 @@ func (s *server) setupRoutes() {
 	usersSvc := users.NewUsersSvc(usersRepo, s.storer, s.cfg)
 	users.InitUsersHandler(apiGroup, s.mid, usersSvc)
 
+	authRepo := auth.NewAuthRepo(s.db)
+	authSvc := auth.NewAuthSvc(authRepo, usersRepo, s.cfg)
+	auth.InitAuthHandler(apiGroup, authSvc, s.cfg)
+
 	tasksRepo := tasks.NewTasksRepo(s.db)
 	tasksSvc := tasks.NewTasksSvc(tasksRepo)
 	tasks.InitTasksHandler(apiGroup, s.mid, tasksSvc)
 
-	authRepo := auth.NewAuthRepo(s.db)
-	authSvc := auth.NewAuthSvc(authRepo, usersRepo, s.cfg)
-	auth.InitAuthHandler(apiGroup, authSvc, s.cfg)
+	submissionsRepo := submissions.NewSubmissionRepo(s.db)
+	submissionsSvc := submissions.NewSubmissionSvc(submissionsRepo, s.graderClient)
+	submissions.InitSubmissionsHandler(apiGroup, s.mid, submissionsSvc, tasksSvc)
 
 	views.InitViewsHandler(s.app, s.mid, usersSvc, tasksSvc)
 }

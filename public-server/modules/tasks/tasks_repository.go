@@ -48,6 +48,18 @@ func (r *tasksRepo) FindOneTask(userId, taskId int) (types.Task, error) {
 	return task, err
 }
 
+func (r *tasksRepo) FindOneTaskTestcaseCount(taskId int) (int, error) {
+	var testcaseCount int
+	err := r.db.Get(&testcaseCount,
+		`SELECT tasks.testcase_count FROM tasks WHERE tasks.id = $1;`,
+		taskId)
+	if err == sql.ErrNoRows {
+		return 0, ErrTaskNotFound
+	}
+
+	return testcaseCount, err
+}
+
 // [startIndex, stopIndex)
 func (r *tasksRepo) FindManyTasks(
 	userId int,

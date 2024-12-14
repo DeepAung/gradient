@@ -51,6 +51,12 @@ func (r *submissionRepo) createSubmissionWithDB(
 	req types.CreateSubmissionReq,
 ) (int, error) {
 	var id int
+
+	language, ok := types.ProtoLanguageToString(req.Language)
+	if !ok {
+		return 0, ErrInvalidLanguage
+	}
+
 	err := sqlx.Get(db, &id,
 		`INSERT INTO submissions (user_id, task_id, code, language, results, result_percent)
 			VALUES ($1, $2, $3, $4, $5, $6)
@@ -58,7 +64,7 @@ func (r *submissionRepo) createSubmissionWithDB(
 		req.UserId,
 		req.TaskId,
 		req.Code,
-		types.ProtoLanguageToString(req.Language),
+		language,
 		req.Results,
 		req.ResultPercent,
 	)

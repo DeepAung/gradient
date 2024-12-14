@@ -1,6 +1,8 @@
 package views
 
 import (
+	"strconv"
+
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/pkg/utils"
 	"github.com/DeepAung/gradient/public-server/views/pages"
@@ -28,6 +30,7 @@ func InitViewsHandler(
 	router.Get("/signin", mid.OnlyUnAuthorized(), handler.SignIn)
 	router.Get("/home", mid.OnlyAuthorized(), handler.Home)
 	router.Get("/profile", mid.OnlyAuthorized(), handler.Profile)
+	router.Get("/tasks/:id", mid.OnlyAuthorized(), handler.TaskDetail)
 }
 
 func (h *viewsHandler) Welcome(c *fiber.Ctx) error {
@@ -65,11 +68,39 @@ func (h *viewsHandler) Profile(c *fiber.Ctx) error {
 		return c.Redirect("/signin", fiber.StatusFound)
 	}
 
-	user, err := h.usersSvc.GetUser(payload.UserId)
+	user, err := h.usersSvc.GetUser(payload.UserId + 10)
 	if err != nil {
 		_, msg := utils.ParseError(err)
-		return c.SendString(msg) // TODO: e.g. user not found
+		return utils.Render(c, pages.Error(msg, "/home"))
 	}
 
 	return utils.Render(c, pages.Profile(user))
+}
+
+func (h *viewsHandler) TaskDetail(c *fiber.Ctx) error {
+	payload, ok := utils.GetPayload(c)
+	if !ok {
+		utils.DeleteTokenCookies(c)
+		return c.Redirect("/signin", fiber.StatusFound)
+	}
+
+	user, err := h.usersSvc.GetUser(payload.UserId)
+	if err != nil {
+		_, msg := utils.ParseError(err)
+		return utils.Render(c, pages.Error(msg, "/home"))
+	}
+
+	taskId, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.Render(c, pages.Error("Invalid task id", "/home"))
+	}
+
+	task, err := h.tasksSvc.GetTask(payload.UserId, taskId)
+	if err != nil {
+		_, msg := utils.ParseError(err)
+		return utils.Render(c, pages.Error(msg, "/home"))
+	}
+
+	// TODO: query lang db
+	return utils.Render(c, pages.TaskDetail(user, task, []string{"cpp", "c", "go", "python"}))
 }

@@ -2,6 +2,7 @@ package submissions
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/DeepAung/gradient/grader-server/proto"
@@ -28,6 +29,7 @@ func NewSubmissionSvc(
 // 3. create submission (return by create channel)
 func (s *submissionSvc) SubmitCode(
 	req types.CreateSubmissionReq,
+	testcaseCount int,
 ) (<-chan proto.ResultType, <-chan types.CreateSubmissionRes, error) {
 	if err := s.repo.CanCreateSubmission(req); err != nil {
 		return nil, nil, err
@@ -35,15 +37,16 @@ func (s *submissionSvc) SubmitCode(
 
 	stream, err := s.graderClient.Grade(context.Background(), &proto.Input{
 		Code:         req.Code,
-		CodeFilename: "",
+		CodeFilename: "", // TODO:
 		Language:     req.Language,
 		TaskId:       uint32(req.TaskId),
 	})
 	if err != nil {
+		fmt.Println("gcp error: ", err.Error())
 		return nil, nil, err
 	}
 
-	resultCh := make(chan proto.ResultType)
+	resultCh := make(chan proto.ResultType, testcaseCount)
 	createCh := make(chan types.CreateSubmissionRes)
 	go func() {
 		req.Results = ""
@@ -61,7 +64,8 @@ func (s *submissionSvc) SubmitCode(
 			}
 
 			resultCh <- resVar
-			req.Results += types.ProtoResultToChar(resVar)
+			char, _ := types.ProtoResultToChar(resVar) // TODO: handle error
+			req.Results += char
 
 			totalCount++
 			if resVar == proto.ResultType_PASS {

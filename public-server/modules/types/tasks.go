@@ -2,6 +2,7 @@ package types
 
 type TasksSvc interface {
 	GetTask(userId, taskId int) (Task, error)
+	GetTestcaseCount(taskId int) (int, error)
 	GetTasks(
 		userId int,
 		search string,
@@ -15,6 +16,7 @@ type TasksSvc interface {
 
 type TasksRepo interface {
 	FindOneTask(userId, taskId int) (Task, error)
+	FindOneTaskTestcaseCount(taskId int) (int, error)
 	// [startIndex, stopIndex)
 	FindManyTasks(
 		userId int,

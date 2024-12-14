@@ -17,6 +17,7 @@ type Config struct {
 
 type AppConfig struct {
 	Address       string
+	GraderAddress string
 	Timeout       time.Duration
 	BodyLimit     string
 	DbUrl         string
@@ -38,6 +39,7 @@ func NewConfig(envPath string) *Config {
 	return &Config{
 		App: &AppConfig{
 			Address:       os.Getenv("ADDRESS"),
+			GraderAddress: os.Getenv("GRADER_ADDRESS"),
 			Timeout:       getenvDuration("TIMEOUT"),
 			BodyLimit:     os.Getenv("BODY_LIMIT"),
 			DbUrl:         os.Getenv("DB_URL"),

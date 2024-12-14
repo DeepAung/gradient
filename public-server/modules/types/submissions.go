@@ -5,7 +5,10 @@ import (
 )
 
 type SubmissionsSvc interface {
-	SubmitCode(req CreateSubmissionReq) (<-chan proto.ResultType, <-chan CreateSubmissionRes, error)
+	SubmitCode(
+		req CreateSubmissionReq,
+		testcaseCount int,
+	) (<-chan proto.ResultType, <-chan CreateSubmissionRes, error)
 	GetSubmission(id int) (Submission, error)
 	GetSubmissions(req GetSubmissionsReq) ([]Submission, error)
 }
@@ -27,6 +30,14 @@ type Submission struct {
 	ResultPercent float32 `db:"result_percent"`
 }
 
+type CreateSubmissionDTO struct {
+	UserId        int    `validate:"required"`
+	TaskId        int    `validate:"required"`
+	Code          string `validate:"required"`
+	Language      proto.LanguageType
+	TestcaseCount int
+}
+
 type CreateSubmissionReq struct {
 	UserId   int
 	TaskId   int
@@ -46,38 +57,4 @@ type GetSubmissionsReq struct {
 type CreateSubmissionRes struct {
 	Id  int
 	Err error
-}
-
-func ProtoResultToChar(res proto.ResultType) string {
-	switch res {
-	case proto.ResultType_COMPILATION_ERROR:
-		return "C"
-	case proto.ResultType_PASS:
-		return "P"
-	case proto.ResultType_INCORRECT:
-		return "-"
-	case proto.ResultType_RUNTIME_ERROR:
-		return "X"
-	case proto.ResultType_TIME_LIMIT_EXCEEDED:
-		return "T"
-	case proto.ResultType_MEMORY_LIMIT_EXCEEDED:
-		return "M"
-	default:
-		return "C"
-	}
-}
-
-func ProtoLanguageToString(language proto.LanguageType) string {
-	switch language {
-	case proto.LanguageType_CPP:
-		return "cpp"
-	case proto.LanguageType_C:
-		return "c"
-	case proto.LanguageType_GO:
-		return "go"
-	case proto.LanguageType_PYTHON:
-		return "python"
-	default:
-		return ""
-	}
 }
