@@ -7,7 +7,7 @@ import (
 )
 
 func GetPayload(c *fiber.Ctx) (types.Payload, bool) {
-	token, ok := c.Context().Value("claims").(*jwt.Token)
+	token, ok := c.Locals("token").(*jwt.Token)
 	if !ok {
 		return types.Payload{}, false
 	}

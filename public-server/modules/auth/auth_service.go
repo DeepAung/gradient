@@ -75,18 +75,21 @@ func (s *authSvc) SignOut(tokenId int) error {
 	return s.authRepo.DeleteToken(tokenId)
 }
 
-func (s *authSvc) UpdateTokens(tokenId int, refreshToken string) (types.Token, error) {
+func (s *authSvc) UpdateTokens(
+	tokenId int,
+	refreshToken string,
+) (types.Token, *types.JwtClaims, error) {
 	has, err := s.authRepo.HasToken(tokenId, refreshToken)
 	if err != nil {
-		return types.Token{}, err
+		return types.Token{}, nil, err
 	}
 	if !has {
-		return types.Token{}, ErrInvalidRefreshTokenOrTokenNotFound
+		return types.Token{}, nil, ErrInvalidRefreshTokenOrTokenNotFound
 	}
 
 	claims, err := parseToken(refreshToken, s.cfg.Jwt.SecretKey)
 	if err != nil {
-		return types.Token{}, err
+		return types.Token{}, nil, err
 	}
 
 	newAccessToken, err := generateToken(
@@ -96,7 +99,7 @@ func (s *authSvc) UpdateTokens(tokenId int, refreshToken string) (types.Token, e
 		claims.Payload,
 	)
 	if err != nil {
-		return types.Token{}, err
+		return types.Token{}, nil, err
 	}
 
 	newRefreshToken, err := generateToken(
@@ -106,18 +109,18 @@ func (s *authSvc) UpdateTokens(tokenId int, refreshToken string) (types.Token, e
 		claims.Payload,
 	)
 	if err != nil {
-		return types.Token{}, err
+		return types.Token{}, nil, err
 	}
 
 	if err := s.authRepo.UpdateTokens(tokenId, newAccessToken, newRefreshToken); err != nil {
-		return types.Token{}, err
+		return types.Token{}, nil, err
 	}
 
 	return types.Token{
 		Id:           tokenId,
 		AccessToken:  newAccessToken,
 		RefreshToken: newRefreshToken,
-	}, nil
+	}, claims, nil
 }
 
 func (s *authSvc) generatePassport(user types.User) (types.Passport, error) {

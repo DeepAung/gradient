@@ -4,6 +4,7 @@ import (
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/modules/auth"
+	"github.com/DeepAung/gradient/public-server/modules/middlewares"
 	"github.com/DeepAung/gradient/public-server/modules/submissions"
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
 	"github.com/DeepAung/gradient/public-server/modules/types"
@@ -29,10 +30,14 @@ func NewServer(
 	cfg *config.Config,
 	db *sqlx.DB,
 	app *fiber.App,
-	mid types.Middleware,
 	storer storer.Storer,
 	graderClient proto.GraderClient,
 ) *server {
+	authRepo := auth.NewAuthRepo(db)
+	usersRepo := users.NewUsersRepo(db)
+	authSvc := auth.NewAuthSvc(authRepo, usersRepo, cfg)
+	mid := middlewares.NewMiddleware(cfg, authSvc)
+
 	return &server{
 		cfg:          cfg,
 		db:           db,

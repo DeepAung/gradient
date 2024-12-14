@@ -6,7 +6,7 @@ type AuthSvc interface {
 	SignUp(username, email, password string) (Passport, error)
 	SignIn(email, password string) (Passport, error)
 	SignOut(tokenId int) error
-	UpdateTokens(tokenId int, refreshToken string) (Token, error)
+	UpdateTokens(tokenId int, refreshToken string) (Token, *JwtClaims, error)
 }
 
 type AuthRepo interface {
