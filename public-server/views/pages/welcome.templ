@@ -4,10 +4,12 @@ import "github.com/DeepAung/gradient/public-server/views/layouts"
 
 templ Welcome() {
 	@layouts.Simple() {
-		<h1>Hello World</h1>
-		<ul>
-			<li>hello</li>
-			<li>world</li>
-		</ul>
+		<div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+			<div class="text-center space-y-6">
+				<h1 class="text-5xl font-bold">Welcome to Gradient</h1>
+				<p class="text-lg">Start your journey to sharpen your coding skills and solve problems!</p>
+				<a href="/home" class="btn btn-neutral  btn-lg rounded-full shadow-sm hover:btn-primary hover:shadow-lg transition-all duration-500">Go to Home</a>
+			</div>
+		</div>
 	}
 }
