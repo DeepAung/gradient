@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/database"
@@ -30,7 +31,7 @@ func main() {
 	// 	log.Fatal("init grader client error: ", err.Error())
 	// }
 	// defer conn.Close()
-	graderClient := graderclient.NewGraderClientMock(10)
+	graderClient := graderclient.NewGraderClientMock(10, 300*time.Millisecond)
 
 	server := server.NewServer(cfg, db, app, storer, graderClient)
 	server.Start()

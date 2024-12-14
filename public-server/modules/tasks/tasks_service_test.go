@@ -76,7 +76,7 @@ func init() {
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
-	repo = NewTasksRepo(db)
+	repo = NewTasksRepo(db, cfg.App.Timeout)
 	svc = NewTasksSvc(repo)
 }
 

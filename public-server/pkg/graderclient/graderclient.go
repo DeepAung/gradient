@@ -29,11 +29,20 @@ func NewGraderClient(
 
 type graderClientMock struct {
 	testcaseCount int
+	sleep         time.Duration
 }
 
-func NewGraderClientMock(testcaseCount int) proto.GraderClient {
+func NewGraderClientMock(testcaseCount int, sleep time.Duration) proto.GraderClient {
+	if testcaseCount == 0 {
+		testcaseCount = 10
+	}
+	if sleep == 0 {
+		sleep = 1 * time.Millisecond
+	}
+
 	return &graderClientMock{
 		testcaseCount: testcaseCount,
+		sleep:         sleep,
 	}
 }
 
@@ -41,16 +50,24 @@ func (g *graderClientMock) SetTestcaseCount(testcaseCount int) {
 	g.testcaseCount = testcaseCount
 }
 
+func (g *graderClientMock) SetSleepDuration(sleep time.Duration) {
+	g.sleep = sleep
+}
+
 func (g *graderClientMock) Grade(
 	ctx context.Context,
 	in *proto.Input,
 	opts ...grpc.CallOption,
 ) (grpc.ServerStreamingClient[proto.Result], error) {
-	return &serverStreamingClientMock{testcaseCount: g.testcaseCount}, nil
+	return &serverStreamingClientMock{
+		testcaseCount: g.testcaseCount,
+		sleep:         g.sleep,
+	}, nil
 }
 
 type serverStreamingClientMock struct {
 	testcaseCount int
+	sleep         time.Duration
 }
 
 func (s *serverStreamingClientMock) Recv() (*proto.Result, error) {
@@ -59,7 +76,7 @@ func (s *serverStreamingClientMock) Recv() (*proto.Result, error) {
 	}
 
 	s.testcaseCount--
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(s.sleep)
 	return &proto.Result{Result: proto.ResultType(rand.Intn(6))}, nil
 }
 func (s *serverStreamingClientMock) Header() (metadata.MD, error) { return nil, nil }

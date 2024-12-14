@@ -1,7 +1,9 @@
 package users
 
 import (
+	"context"
 	"database/sql"
+	"time"
 
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/gofiber/fiber/v2"
@@ -15,18 +17,23 @@ var (
 )
 
 type usersRepo struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+	timeout time.Duration
 }
 
-func NewUsersRepo(db *sqlx.DB) types.UsersRepo {
+func NewUsersRepo(db *sqlx.DB, timeout time.Duration) types.UsersRepo {
 	return &usersRepo{
-		db: db,
+		db:      db,
+		timeout: timeout,
 	}
 }
 
 func (r *usersRepo) CreateUser(username, email, hashedPassword string) (types.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var user types.User
-	err := r.db.Get(&user,
+	err := r.db.GetContext(ctx, &user,
 		`INSERT INTO users (username, email, password)
 			VALUES ($1, $2, $3)
 		RETURNING id, username, email, picture_url, is_admin;`,
@@ -47,8 +54,11 @@ func (r *usersRepo) CreateUser(username, email, hashedPassword string) (types.Us
 }
 
 func (r *usersRepo) FindOneUserById(id int) (types.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var user types.User
-	err := r.db.Get(
+	err := r.db.GetContext(ctx,
 		&user,
 		`SELECT id, username, email, picture_url, is_admin
 		FROM users WHERE id = $1`,
@@ -61,8 +71,11 @@ func (r *usersRepo) FindOneUserById(id int) (types.User, error) {
 }
 
 func (r *usersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWithPassword, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var user types.UserWithPassword
-	err := r.db.Get(
+	err := r.db.GetContext(ctx,
 		&user,
 		`SELECT id, username, email, password, picture_url, is_admin
 		FROM users WHERE email = $1`,
@@ -75,8 +88,11 @@ func (r *usersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWith
 }
 
 func (r *usersRepo) FindOneUserPasswordById(id int) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var hashedPassword string
-	err := r.db.Get(&hashedPassword, `SELECT password FROM users WHERE id = $1`, id)
+	err := r.db.GetContext(ctx, &hashedPassword, `SELECT password FROM users WHERE id = $1`, id)
 	if err == sql.ErrNoRows {
 		return "", ErrUserNotFound
 	}
@@ -84,7 +100,10 @@ func (r *usersRepo) FindOneUserPasswordById(id int) (string, error) {
 }
 
 func (r *usersRepo) UpdateUser(id int, req types.UpdateUserReq) error {
-	result, err := r.db.Exec(`
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(ctx, `
 		UPDATE users
 		SET username = $1,
 		picture_url = COALESCE($2, picture_url),
@@ -106,7 +125,15 @@ func (r *usersRepo) UpdateUser(id int, req types.UpdateUserReq) error {
 }
 
 func (r *usersRepo) UpdateUserPassword(id int, hashedPassword string) error {
-	result, err := r.db.Exec(`UPDATE users SET password = $1 WHERE id = $2;`, hashedPassword, id)
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(
+		ctx,
+		`UPDATE users SET password = $1 WHERE id = $2;`,
+		hashedPassword,
+		id,
+	)
 	if err != nil {
 		return err
 	}
@@ -122,7 +149,10 @@ func (r *usersRepo) UpdateUserPassword(id int, hashedPassword string) error {
 }
 
 func (r *usersRepo) DeleteUser(id int) error {
-	result, err := r.db.Exec(`DELETE FROM users WHERE id = $1;`, id)
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(ctx, `DELETE FROM users WHERE id = $1;`, id)
 	if err != nil {
 		return err
 	}

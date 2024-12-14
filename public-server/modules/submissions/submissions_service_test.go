@@ -122,9 +122,9 @@ func init() {
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
-	submissionsRepo = NewSubmissionRepo(db)
-	tasksRepo := tasks.NewTasksRepo(db)
-	client = graderclient.NewGraderClientMock(10)
+	submissionsRepo = NewSubmissionRepo(db, cfg.App.Timeout)
+	tasksRepo := tasks.NewTasksRepo(db, cfg.App.Timeout)
+	client = graderclient.NewGraderClientMock(10, 0)
 	svc = NewSubmissionSvc(submissionsRepo, tasksRepo, client)
 }
 

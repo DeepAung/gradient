@@ -30,7 +30,7 @@ func init() {
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
 
-	repo = NewUsersRepo(db)
+	repo = NewUsersRepo(db, cfg.App.Timeout)
 	svc = NewUsersSvc(repo, myStorer, cfg)
 }
 

@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"context"
 	"database/sql"
+	"time"
 
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/gofiber/fiber/v2"
@@ -11,18 +13,23 @@ import (
 var ErrTokenNotFound = fiber.NewError(fiber.StatusBadRequest, "token not found")
 
 type authRepo struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+	timeout time.Duration
 }
 
-func NewAuthRepo(db *sqlx.DB) types.AuthRepo {
+func NewAuthRepo(db *sqlx.DB, timeout time.Duration) types.AuthRepo {
 	return &authRepo{
-		db: db,
+		db:      db,
+		timeout: timeout,
 	}
 }
 
 func (r *authRepo) CreateToken(accessToken, refreshToken string) (types.Token, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var token types.Token
-	err := r.db.Get(&token,
+	err := r.db.GetContext(ctx, &token,
 		`INSERT INTO tokens (access_token, refresh_token)
 			VALUES ($1, $2)
 		RETURNING id, access_token, refresh_token;`,
@@ -36,7 +43,10 @@ func (r *authRepo) CreateToken(accessToken, refreshToken string) (types.Token, e
 }
 
 func (r *authRepo) DeleteToken(tokenId int) error {
-	result, err := r.db.Exec(`DELETE FROM tokens WHERE tokens.id = $1;`, tokenId)
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(ctx, `DELETE FROM tokens WHERE tokens.id = $1;`, tokenId)
 	if err != nil {
 		return err
 	}
@@ -52,8 +62,11 @@ func (r *authRepo) DeleteToken(tokenId int) error {
 }
 
 func (r *authRepo) HasToken(id int, refreshToken string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var tmp int
-	err := r.db.Get(&tmp,
+	err := r.db.GetContext(ctx, &tmp,
 		`SELECT 1 FROM tokens WHERE tokens.id = $1 AND tokens.refresh_token = $2;`,
 		id, refreshToken)
 	if err == sql.ErrNoRows {
@@ -63,7 +76,10 @@ func (r *authRepo) HasToken(id int, refreshToken string) (bool, error) {
 }
 
 func (r *authRepo) UpdateTokens(id int, newAccessToken, newRefreshToken string) error {
-	result, err := r.db.Exec(
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE tokens
 		SET access_token = $1, refresh_token = $2
 		WHERE tokens.id = $3;`,

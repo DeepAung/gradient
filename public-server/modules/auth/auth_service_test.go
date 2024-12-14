@@ -26,8 +26,8 @@ func init() {
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)
 	database.RunSQL(db, seedSourceName)
-	myUsersRepo = users.NewUsersRepo(db)
-	myAuthRepo = NewAuthRepo(db)
+	myUsersRepo = users.NewUsersRepo(db, cfg.App.Timeout)
+	myAuthRepo = NewAuthRepo(db, cfg.App.Timeout)
 	myAuthSvc = NewAuthSvc(myAuthRepo, myUsersRepo, cfg)
 }
 

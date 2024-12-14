@@ -1,7 +1,9 @@
 package tasks
 
 import (
+	"context"
 	"database/sql"
+	"time"
 
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/gofiber/fiber/v2"
@@ -16,18 +18,23 @@ var (
 )
 
 type tasksRepo struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+	timeout time.Duration
 }
 
-func NewTasksRepo(db *sqlx.DB) types.TasksRepo {
+func NewTasksRepo(db *sqlx.DB, timeout time.Duration) types.TasksRepo {
 	return &tasksRepo{
-		db: db,
+		db:      db,
+		timeout: timeout,
 	}
 }
 
 func (r *tasksRepo) FindOneTask(userId, taskId int) (types.Task, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var task types.Task
-	err := r.db.Get(&task,
+	err := r.db.GetContext(ctx, &task,
 		`SELECT
 			tasks.id,
 			tasks.display_name,
@@ -49,8 +56,11 @@ func (r *tasksRepo) FindOneTask(userId, taskId int) (types.Task, error) {
 }
 
 func (r *tasksRepo) FindOneTaskTestcaseCount(taskId int) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var testcaseCount int
-	err := r.db.Get(&testcaseCount,
+	err := r.db.GetContext(ctx, &testcaseCount,
 		`SELECT tasks.testcase_count FROM tasks WHERE tasks.id = $1;`,
 		taskId)
 	if err == sql.ErrNoRows {
@@ -67,6 +77,9 @@ func (r *tasksRepo) FindManyTasks(
 	onlyCompleted bool,
 	startIndex, stopIndex int,
 ) ([]types.Task, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var tasks []types.Task
 
 	bindedStmt, args, err := r.db.BindNamed(`
@@ -96,13 +109,16 @@ func (r *tasksRepo) FindManyTasks(
 	if err != nil {
 		return nil, err
 	}
-	err = r.db.Select(&tasks, bindedStmt, args...)
+	err = r.db.SelectContext(ctx, &tasks, bindedStmt, args...)
 
 	return tasks, err
 }
 
 func (r *tasksRepo) CreateTask(req types.CreateUpdateTaskReq) error {
-	result, err := r.db.Exec(
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(ctx,
 		`INSERT INTO tasks (display_name, url_name, content_url, testcase_count) 
 			VALUES ($1, $2, $3, $4)`,
 		req.DisplayName, req.UrlName, req.ContentUrl, req.TestcaseCount)
@@ -130,7 +146,10 @@ func (r *tasksRepo) CreateTask(req types.CreateUpdateTaskReq) error {
 }
 
 func (r *tasksRepo) UpdateTask(id int, req types.CreateUpdateTaskReq) error {
-	result, err := r.db.Exec(
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE tasks SET display_name = $1, url_name = $2, content_url = $3, testcase_count = $4
 		WHERE id = $5`,
 		req.DisplayName, req.UrlName, req.ContentUrl, req.TestcaseCount, id)
@@ -158,7 +177,10 @@ func (r *tasksRepo) UpdateTask(id int, req types.CreateUpdateTaskReq) error {
 }
 
 func (r *tasksRepo) DeleteTask(id int) error {
-	result, err := r.db.Exec(`DELETE FROM tasks WHERE id = $1`, id)
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	result, err := r.db.ExecContext(ctx, `DELETE FROM tasks WHERE id = $1`, id)
 	if err != nil {
 		return err
 	}

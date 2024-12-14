@@ -1,7 +1,9 @@
 package submissions
 
 import (
+	"context"
 	"database/sql"
+	"time"
 
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
 	"github.com/DeepAung/gradient/public-server/modules/types"
@@ -17,26 +19,34 @@ var (
 )
 
 type submissionRepo struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+	timeout time.Duration
 }
 
-func NewSubmissionRepo(db *sqlx.DB) types.SubmissionsRepo {
+func NewSubmissionRepo(db *sqlx.DB, timeout time.Duration) types.SubmissionsRepo {
 	return &submissionRepo{
-		db: db,
+		db:      db,
+		timeout: timeout,
 	}
 }
 
 func (r *submissionRepo) CreateSubmission(req types.CreateSubmissionReq) (int, error) {
-	return r.createSubmissionWithDB(r.db, req)
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	return r.createSubmissionWithDB(ctx, r.db, req)
 }
 
 func (r *submissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) error {
-	tx, err := r.db.Beginx()
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
-	if _, err := r.createSubmissionWithDB(tx, req); err != nil {
+	if _, err := r.createSubmissionWithDB(ctx, tx, req); err != nil {
 		return err
 	}
 
@@ -47,7 +57,8 @@ func (r *submissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) erro
 }
 
 func (r *submissionRepo) createSubmissionWithDB(
-	db sqlx.Queryer,
+	ctx context.Context,
+	db sqlx.QueryerContext,
 	req types.CreateSubmissionReq,
 ) (int, error) {
 	var id int
@@ -57,7 +68,7 @@ func (r *submissionRepo) createSubmissionWithDB(
 		return 0, ErrInvalidLanguage
 	}
 
-	err := sqlx.Get(db, &id,
+	err := sqlx.GetContext(ctx, db, &id,
 		`INSERT INTO submissions (user_id, task_id, code, language, results, result_percent)
 			VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`,
@@ -89,8 +100,11 @@ func (r *submissionRepo) createSubmissionWithDB(
 }
 
 func (r *submissionRepo) FindOneSubmission(id int) (types.Submission, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var submission types.Submission
-	err := r.db.Get(&submission,
+	err := r.db.GetContext(ctx, &submission,
 		`SELECT id, user_id, task_id, code, language, results, result_percent 
 		FROM submissions WHERE id = $1`,
 		id)
@@ -104,8 +118,11 @@ func (r *submissionRepo) FindOneSubmission(id int) (types.Submission, error) {
 func (r *submissionRepo) FindManySubmissions(
 	req types.GetSubmissionsReq,
 ) ([]types.Submission, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
 	var submissions []types.Submission
-	err := r.db.Select(&submissions,
+	err := r.db.SelectContext(ctx, &submissions,
 		`SELECT id, user_id, task_id, code, language, results, result_percent 
 		FROM submissions
 		WHERE user_id = COALESCE($1, user_id) AND task_id = COALESCE($2, task_id)
