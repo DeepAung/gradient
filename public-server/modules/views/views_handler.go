@@ -3,6 +3,7 @@ package views
 import (
 	"strconv"
 
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/pkg/utils"
 	"github.com/DeepAung/gradient/public-server/views/pages"
@@ -10,8 +11,9 @@ import (
 )
 
 type viewsHandler struct {
-	usersSvc types.UsersSvc
-	tasksSvc types.TasksSvc
+	usersSvc  types.UsersSvc
+	tasksSvc  types.TasksSvc
+	graderCfg *graderconfig.Config
 }
 
 func InitViewsHandler(
@@ -19,10 +21,12 @@ func InitViewsHandler(
 	mid types.Middleware,
 	usersSvc types.UsersSvc,
 	tasksSvc types.TasksSvc,
+	graderCfg *graderconfig.Config,
 ) {
 	handler := &viewsHandler{
-		usersSvc: usersSvc,
-		tasksSvc: tasksSvc,
+		usersSvc:  usersSvc,
+		tasksSvc:  tasksSvc,
+		graderCfg: graderCfg,
 	}
 
 	router.Get("/", handler.Welcome)
@@ -101,6 +105,6 @@ func (h *viewsHandler) TaskDetail(c *fiber.Ctx) error {
 		return utils.Render(c, pages.Error(msg, "/home"))
 	}
 
-	// TODO: query lang db
-	return utils.Render(c, pages.TaskDetail(user, task, []string{"cpp", "c", "go", "python"}))
+	languages := h.graderCfg.Languages
+	return utils.Render(c, pages.TaskDetail(user, task, languages))
 }

@@ -9,23 +9,29 @@ import (
 	"net"
 	"os"
 
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/grader-server/pkg/checker"
 	"github.com/DeepAung/gradient/grader-server/pkg/runner"
 	"github.com/DeepAung/gradient/grader-server/pkg/testcasepuller"
 	"github.com/DeepAung/gradient/grader-server/proto"
-	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/google/uuid"
 	grpc "google.golang.org/grpc"
 )
 
-var port = flag.Int("port", 50051, "The server port")
+var (
+	port     = flag.Int("port", 50051, "The server port")
+	jsonPath = flag.String("json", ".env.dev.json", "json path")
+)
 
 type graderServer struct {
 	proto.UnimplementedGraderServer
+	cfg *graderconfig.Config
 }
 
-func newGraderServer() *graderServer {
-	return &graderServer{}
+func newGraderServer(cfg *graderconfig.Config) *graderServer {
+	return &graderServer{
+		cfg: cfg,
+	}
 }
 
 func (s *graderServer) Grade(
@@ -46,10 +52,11 @@ func (s *graderServer) Grade(
 	// Create code file/folder
 	submissionId := uuid.NewString()
 	submissionDir := fmt.Sprintf("tmp/submissions/%s", submissionId)
-	codeExt, ok := types.ProtoLanguageToExtension(input.Language)
+	languageInfo, ok := s.cfg.GetLanguageInfoFromProto(input.Language)
 	if !ok {
 		return errors.New("invalid language")
 	}
+	codeExt := languageInfo.Extension
 
 	codeFilename := fmt.Sprintf("tmp/submissions/%s/%s", submissionId, "code"+codeExt)
 	if err := os.MkdirAll(submissionDir, os.ModePerm); err != nil {
@@ -122,8 +129,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	cfg := graderconfig.NewConfig(*jsonPath)
+
 	grpcServer := grpc.NewServer()
-	graderServer := newGraderServer()
+	graderServer := newGraderServer(cfg)
 	proto.RegisterGraderServer(grpcServer, graderServer)
 
 	log.Printf("grader server running on port %d", *port)

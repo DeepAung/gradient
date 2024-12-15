@@ -2,11 +2,12 @@ package pages
 
 import (
 	"fmt"
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/views/layouts"
 )
 
-templ TaskDetail(user types.User, task types.Task, languages []string) {
+templ TaskDetail(user types.User, task types.Task, languages []graderconfig.LanguageInfo) {
 	@layouts.WithNav(user, nil) {
 		<div class="grid grid-cols-2 p-8 gap-8 h-[80vh]">
 			<embed src="/public/test.pdf" width="100%" height="100%"/>
@@ -25,9 +26,8 @@ templ TaskDetail(user types.User, task types.Task, languages []string) {
 					<div class="flex gap-2">
 						<input type="submit" class="flex-auto btn btn-neutral w-full" value="Submit"/>
 						<select name="language" class="flex-1 select select-bordered">
-							<option selected value={ languages[0] }>{ languages[0] }</option>
-							for _, language := range languages[1:] {
-								<option value={ language }>{ language }</option>
+							for i, language := range languages {
+								<option value={ fmt.Sprint(language.ProtoIndex) } selected?={ i == 0 }>{ language.Name }</option>
 							}
 						</select>
 					</div>

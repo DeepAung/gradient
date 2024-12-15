@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 	"github.com/DeepAung/gradient/public-server/pkg/hub"
 	"github.com/DeepAung/gradient/public-server/pkg/utils"
@@ -19,6 +20,7 @@ import (
 type submissionsHandler struct {
 	submissionsSvc types.SubmissionsSvc
 	tasksSvc       types.TasksSvc
+	graderCfg      *graderconfig.Config
 }
 
 func InitSubmissionsHandler(
@@ -26,10 +28,12 @@ func InitSubmissionsHandler(
 	mid types.Middleware,
 	submissionsSvc types.SubmissionsSvc,
 	tasksSvc types.TasksSvc,
+	graderCfg *graderconfig.Config,
 ) {
 	handler := &submissionsHandler{
 		submissionsSvc: submissionsSvc,
 		tasksSvc:       tasksSvc,
+		graderCfg:      graderCfg,
 	}
 
 	submissionsGroup := router.Group("/submissions")
@@ -62,7 +66,12 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 	}
 
 	// Get language
-	language, ok := types.StringToProtoLanguage(c.FormValue("language"))
+	protoIndex, err := strconv.Atoi(c.FormValue("language"))
+	if err != nil {
+		c.Response().Header.Add("HX-Retarget", "#error-text")
+		return c.SendString(ErrInvalidLanguage.Error())
+	}
+	languageInfo, ok := h.graderCfg.GetLanguageInfoFromProtoIndex(protoIndex)
 	if !ok {
 		c.Response().Header.Add("HX-Retarget", "#error-text")
 		return c.SendString(ErrInvalidLanguage.Error())
@@ -90,7 +99,7 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 		UserId:   payload.UserId,
 		TaskId:   taskId,
 		Code:     string(codeBytes),
-		Language: language,
+		Language: languageInfo,
 	}
 
 	if err := utils.Validate(&dto); err != nil {
@@ -108,7 +117,7 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 	utils.SetCookie(c, "resultId", resultId, 0)
 	hub.CreateResult(resultId, resultCh)
 
-	_ = createCh
+	_ = createCh // TODO:
 	// createRes := <-createCh
 	//
 	// if createRes.Err != nil {
@@ -133,7 +142,8 @@ func (h *submissionsHandler) SendResult(c *websocket.Conn) {
 	defer cancel()
 
 	for result := range resultCh {
-		char, _ := types.ProtoResultToChar(result) // TODO: handle error
+		resultInfo, _ := h.graderCfg.GetResultInfoFromProto(result) // TODO: handle error
+		char := resultInfo.Char
 
 		w, _ := c.NextWriter(websocket.TextMessage) // TODO: handle error
 		components.OOBWrap("beforeend:#submission-results", components.Text(char)).Render(ctx, w)

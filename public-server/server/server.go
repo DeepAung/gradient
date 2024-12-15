@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/modules/auth"
@@ -19,6 +20,7 @@ import (
 
 type server struct {
 	cfg          *config.Config
+	graderCfg    *graderconfig.Config
 	db           *sqlx.DB
 	app          *fiber.App
 	mid          types.Middleware
@@ -28,6 +30,7 @@ type server struct {
 
 func NewServer(
 	cfg *config.Config,
+	graderCfg *graderconfig.Config,
 	db *sqlx.DB,
 	app *fiber.App,
 	storer storer.Storer,
@@ -40,6 +43,7 @@ func NewServer(
 
 	return &server{
 		cfg:          cfg,
+		graderCfg:    graderCfg,
 		db:           db,
 		app:          app,
 		mid:          mid,
@@ -79,8 +83,13 @@ func (s *server) setupRoutes() {
 	tasks.InitTasksHandler(apiGroup, s.mid, tasksSvc)
 
 	submissionsRepo := submissions.NewSubmissionRepo(s.db, s.cfg.App.Timeout)
-	submissionsSvc := submissions.NewSubmissionSvc(submissionsRepo, tasksRepo, s.graderClient)
-	submissions.InitSubmissionsHandler(apiGroup, s.mid, submissionsSvc, tasksSvc)
+	submissionsSvc := submissions.NewSubmissionSvc(
+		submissionsRepo,
+		tasksRepo,
+		s.graderClient,
+		s.graderCfg,
+	)
+	submissions.InitSubmissionsHandler(apiGroup, s.mid, submissionsSvc, tasksSvc, s.graderCfg)
 
-	views.InitViewsHandler(s.app, s.mid, usersSvc, tasksSvc)
+	views.InitViewsHandler(s.app, s.mid, usersSvc, tasksSvc, s.graderCfg)
 }

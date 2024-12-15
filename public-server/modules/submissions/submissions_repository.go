@@ -23,7 +23,10 @@ type submissionRepo struct {
 	timeout time.Duration
 }
 
-func NewSubmissionRepo(db *sqlx.DB, timeout time.Duration) types.SubmissionsRepo {
+func NewSubmissionRepo(
+	db *sqlx.DB,
+	timeout time.Duration,
+) types.SubmissionsRepo {
 	return &submissionRepo{
 		db:      db,
 		timeout: timeout,
@@ -63,11 +66,6 @@ func (r *submissionRepo) createSubmissionWithDB(
 ) (int, error) {
 	var id int
 
-	language, ok := types.ProtoLanguageToString(req.Language)
-	if !ok {
-		return 0, ErrInvalidLanguage
-	}
-
 	err := sqlx.GetContext(ctx, db, &id,
 		`INSERT INTO submissions (user_id, task_id, code, language, results, result_percent)
 			VALUES ($1, $2, $3, $4, $5, $6)
@@ -75,7 +73,7 @@ func (r *submissionRepo) createSubmissionWithDB(
 		req.UserId,
 		req.TaskId,
 		req.Code,
-		language,
+		req.Language.DbName,
 		req.Results,
 		req.ResultPercent,
 	)

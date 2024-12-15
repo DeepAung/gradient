@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/public-server/modules/types"
 )
@@ -13,17 +14,20 @@ type submissionSvc struct {
 	submissionsRepo types.SubmissionsRepo
 	tasksRepo       types.TasksRepo
 	graderClient    proto.GraderClient
+	graderCfg       *graderconfig.Config
 }
 
 func NewSubmissionSvc(
 	submissionsRepo types.SubmissionsRepo,
 	tasksRepo types.TasksRepo,
 	graderClient proto.GraderClient,
+	graderCfg *graderconfig.Config,
 ) types.SubmissionsSvc {
 	return &submissionSvc{
 		submissionsRepo: submissionsRepo,
 		tasksRepo:       tasksRepo,
 		graderClient:    graderClient,
+		graderCfg:       graderCfg,
 	}
 }
 
@@ -39,7 +43,7 @@ func (s *submissionSvc) SubmitCode(
 
 	stream, err := s.graderClient.Grade(context.Background(), &proto.Input{
 		Code:     req.Code,
-		Language: req.Language,
+		Language: req.Language.Proto,
 		TaskId:   uint32(req.TaskId),
 	})
 	if err != nil {
@@ -71,8 +75,8 @@ func (s *submissionSvc) SubmitCode(
 			}
 
 			resultCh <- resVar
-			char, _ := types.ProtoResultToChar(resVar) // TODO: handle error
-			req.Results += char
+			resultInfo, _ := s.graderCfg.GetResultInfoFromProto(resVar) // TODO: handle error
+			req.Results += resultInfo.Char
 
 			totalCount++
 			if resVar == proto.ResultType_PASS {

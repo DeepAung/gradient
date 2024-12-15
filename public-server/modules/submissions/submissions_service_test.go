@@ -5,6 +5,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/database"
@@ -19,18 +20,15 @@ import (
 var (
 	migrateSourceName = "../../migrations/migrate.sql"
 	seedSourceName    = "../../migrations/seed.sql"
+	jsonPath          = "../../../grader-server/.env.dev.json"
 	cfg               *config.Config
 	db                *sqlx.DB
 	client            proto.GraderClient
 	submissionsRepo   types.SubmissionsRepo
 	svc               types.SubmissionsSvc
+	graderCfg         *graderconfig.Config
 
-	createReq = types.CreateSubmissionReq{
-		UserId:   1,
-		TaskId:   1,
-		Code:     "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
-		Language: proto.LanguageType_PYTHON,
-	}
+	createReq types.CreateSubmissionReq
 
 	listSubmissions = []types.Submission{
 		{
@@ -125,7 +123,16 @@ func init() {
 	submissionsRepo = NewSubmissionRepo(db, cfg.App.Timeout)
 	tasksRepo := tasks.NewTasksRepo(db, cfg.App.Timeout)
 	client = graderclient.NewGraderClientMock(10, 0)
-	svc = NewSubmissionSvc(submissionsRepo, tasksRepo, client)
+	graderCfg = graderconfig.NewConfig(jsonPath)
+	svc = NewSubmissionSvc(submissionsRepo, tasksRepo, client, graderCfg)
+
+	lang, _ := graderCfg.GetLanguageInfoFromProto(proto.LanguageType_PYTHON)
+	createReq = types.CreateSubmissionReq{
+		UserId:   1,
+		TaskId:   1,
+		Code:     "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
+		Language: lang,
+	}
 }
 
 func TestGetSubmission(t *testing.T) {
@@ -227,7 +234,7 @@ func TestSubmitCodeMockGrader(t *testing.T) {
 
 	t.Run("invalid language", func(t *testing.T) {
 		req := createReq
-		req.Language = 1000
+		req.Language = graderconfig.LanguageInfo{}
 		_, _, err := svc.SubmitCode(req)
 		asserts.EqualError(t, err, ErrInvalidLanguage)
 	})
@@ -255,9 +262,7 @@ func TestSubmitCodeMockGrader(t *testing.T) {
 		asserts.Equal(t, "submission task id", submission.TaskId, req.TaskId)
 		asserts.Equal(t, "submission code", submission.Code, req.Code)
 
-		language, ok := types.ProtoLanguageToString(req.Language)
-		asserts.Equal(t, "ok", ok, true)
-		asserts.Equal(t, "submission language", submission.Language, language)
+		asserts.Equal(t, "submission language", submission.Language, req.Language.DbName)
 		asserts.Equal(t, "submission result length", len(submission.Results), resultLen)
 	})
 }

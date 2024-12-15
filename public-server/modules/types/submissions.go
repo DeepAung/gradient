@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/grader-server/proto"
 )
 
@@ -31,7 +32,7 @@ type CreateSubmissionReq struct {
 	UserId   int    `validate:"required"`
 	TaskId   int    `validate:"required"`
 	Code     string `validate:"required"`
-	Language proto.LanguageType
+	Language graderconfig.LanguageInfo
 
 	// assign after complete submiting code
 	Results       string
