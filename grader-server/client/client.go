@@ -72,6 +72,6 @@ func submitCode(client proto.GraderClient, codeFilename string, language proto.L
 			log.Fatal("stream.Recv: ", err)
 		}
 
-		log.Println("result: ", proto.ResultType_name[int32(result.Result)])
+		log.Println("result: ", proto.StatusType_name[int32(result.Result)])
 	}
 }

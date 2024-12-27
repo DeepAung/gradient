@@ -4,7 +4,7 @@ package main;
 option go_package = "github.com/DeepAung/gradient/grader-server/proto";
 
 service Grader {
-  rpc Grade(Input) returns (stream Result) {}
+  rpc Grade(Input) returns (stream Status) {}
 }
 
 enum LanguageType {
@@ -14,7 +14,7 @@ enum LanguageType {
   PYTHON = 3;
 }
 
-enum ResultType {
+enum StatusType {
   COMPILATION_ERROR = 0;
   PASS = 1;
   INCORRECT = 2;
@@ -29,4 +29,4 @@ message Input {
   uint32 taskId = 4;
 }
 
-message Result { ResultType result = 1; }
+message Status { StatusType result = 1; }

@@ -8,8 +8,8 @@ import (
 )
 
 type CodeRunner interface {
-	Build(ctx context.Context, codeFilename string) (bool, proto.ResultType)
-	Run(ctx context.Context, codeFilename, inputFilename string) (bool, proto.ResultType)
+	Build(ctx context.Context, codeFilename string) (bool, proto.StatusType)
+	Run(ctx context.Context, codeFilename, inputFilename string) (bool, proto.StatusType)
 }
 
 var codeRunners = map[proto.LanguageType]func() CodeRunner{

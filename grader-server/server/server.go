@@ -36,7 +36,7 @@ func newGraderServer(cfg *graderconfig.Config) *graderServer {
 
 func (s *graderServer) Grade(
 	input *proto.Input,
-	stream grpc.ServerStreamingServer[proto.Result],
+	stream grpc.ServerStreamingServer[proto.Status],
 ) error {
 	// Pull testcases from taskId
 	log.Println("Grader: start Grade() function")
@@ -84,7 +84,7 @@ func (s *graderServer) Grade(
 	ctx := context.Background() // TODO: change to context with timeout
 	ok, result := runner.Build(ctx, codeFilename)
 	if !ok {
-		stream.Send(&proto.Result{Result: result})
+		stream.Send(&proto.Status{Result: result})
 		return nil
 	}
 	log.Println("Grader: builded")
@@ -95,7 +95,7 @@ func (s *graderServer) Grade(
 
 		ok, result := runner.Run(ctx, codeFilename, inputFilename)
 		if !ok {
-			stream.Send(&proto.Result{Result: result})
+			stream.Send(&proto.Status{Result: result})
 			continue
 		}
 
@@ -106,9 +106,9 @@ func (s *graderServer) Grade(
 			return err
 		}
 		if ok {
-			stream.Send(&proto.Result{Result: proto.ResultType_PASS})
+			stream.Send(&proto.Status{Result: proto.StatusType_PASS})
 		} else {
-			stream.Send(&proto.Result{Result: proto.ResultType_INCORRECT})
+			stream.Send(&proto.Status{Result: proto.StatusType_INCORRECT})
 		}
 	}
 	log.Println("Grader: runned")

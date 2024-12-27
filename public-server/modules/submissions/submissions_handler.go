@@ -66,13 +66,8 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 	}
 
 	// Get language
-	protoIndex, err := strconv.Atoi(c.FormValue("language"))
+	languageIndex, err := strconv.Atoi(c.FormValue("language"))
 	if err != nil {
-		c.Response().Header.Add("HX-Retarget", "#error-text")
-		return c.SendString(ErrInvalidLanguage.Error())
-	}
-	languageInfo, ok := h.graderCfg.GetLanguageInfoFromProtoIndex(protoIndex)
-	if !ok {
 		c.Response().Header.Add("HX-Retarget", "#error-text")
 		return c.SendString(ErrInvalidLanguage.Error())
 	}
@@ -96,10 +91,10 @@ func (h *submissionsHandler) SubmitCode(c *fiber.Ctx) error {
 	codeFile.Close()
 
 	dto := types.CreateSubmissionReq{
-		UserId:   payload.UserId,
-		TaskId:   taskId,
-		Code:     string(codeBytes),
-		Language: languageInfo,
+		UserId:        payload.UserId,
+		TaskId:        taskId,
+		Code:          string(codeBytes),
+		LanguageIndex: languageIndex,
 	}
 
 	if err := utils.Validate(&dto); err != nil {

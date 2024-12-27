@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	Languages []LanguageInfo `json:"languages"`
-	Results   []ResultInfo   `json:"results"`
+	Statuses  []StatusInfo   `json:"statuses"`
 }
 
 type LanguageInfo struct {
@@ -24,11 +24,11 @@ type LanguageInfo struct {
 	Proto        proto.LanguageType
 }
 
-type ResultInfo struct {
+type StatusInfo struct {
 	ProtoIndex int    `json:"protoIndex"`
 	Name       string `json:"name"`
 	Char       string `json:"char"`
-	Proto      proto.ResultType
+	Proto      proto.StatusType
 }
 
 func NewConfig(jsonPath string) *Config {
@@ -52,23 +52,23 @@ func NewConfig(jsonPath string) *Config {
 		config.Languages[i].Proto = proto.LanguageType(config.Languages[i].ProtoIndex)
 	}
 
-	for i := range len(config.Results) {
-		config.Results[i].Proto = proto.ResultType(config.Results[i].ProtoIndex)
+	for i := range len(config.Statuses) {
+		config.Statuses[i].Proto = proto.StatusType(config.Statuses[i].ProtoIndex)
 	}
 
 	return &config
 }
 
-func (c *Config) GetResultInfoFromProto(val proto.ResultType) (ResultInfo, bool) {
+func (c *Config) GetResultInfoFromProto(val proto.StatusType) (StatusInfo, bool) {
 	idx := int(val)
 	return c.GetResultInfoFromProtoIndex(idx)
 }
 
-func (c *Config) GetResultInfoFromProtoIndex(idx int) (ResultInfo, bool) {
-	if 0 <= idx && idx < len(c.Results) {
-		return c.Results[idx], true
+func (c *Config) GetResultInfoFromProtoIndex(idx int) (StatusInfo, bool) {
+	if 0 <= idx && idx < len(c.Statuses) {
+		return c.Statuses[idx], true
 	}
-	return ResultInfo{}, false
+	return StatusInfo{}, false
 }
 
 func (c *Config) GetLanguageInfoFromProto(val proto.LanguageType) (LanguageInfo, bool) {

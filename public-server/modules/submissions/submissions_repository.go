@@ -3,6 +3,7 @@ package submissions
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/DeepAung/gradient/public-server/modules/tasks"
@@ -13,9 +14,9 @@ import (
 )
 
 var (
-	ErrSubmissionNotFound   = fiber.NewError(fiber.StatusBadRequest, "submission not found")
-	ErrInvalidLanguage      = fiber.NewError(fiber.StatusBadRequest, "invalid language")
-	ErrInvalidResultPercent = fiber.NewError(fiber.StatusBadRequest, "invalid result percent")
+	ErrSubmissionNotFound = fiber.NewError(fiber.StatusBadRequest, "submission not found")
+	ErrInvalidLanguage    = fiber.NewError(fiber.StatusBadRequest, "invalid language")
+	ErrInvalidScore       = fiber.NewError(fiber.StatusBadRequest, "invalid score")
 )
 
 type submissionRepo struct {
@@ -37,7 +38,20 @@ func (r *submissionRepo) CreateSubmission(req types.CreateSubmissionReq) (int, e
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
-	return r.createSubmissionWithDB(ctx, r.db, req)
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := r.createSubmissionWithDB(ctx, tx, req)
+	if err != nil {
+		return 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (r *submissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) error {
@@ -59,23 +73,23 @@ func (r *submissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) erro
 	return nil
 }
 
+type mydb interface {
+	sqlx.QueryerContext
+	sqlx.ExecerContext
+}
+
 func (r *submissionRepo) createSubmissionWithDB(
 	ctx context.Context,
-	db sqlx.QueryerContext,
+	db mydb,
 	req types.CreateSubmissionReq,
 ) (int, error) {
 	var id int
 
 	err := sqlx.GetContext(ctx, db, &id,
-		`INSERT INTO submissions (user_id, task_id, code, language, results, result_percent)
-			VALUES ($1, $2, $3, $4, $5, $6)
+		`INSERT INTO submissions ( user_id, task_id, code, language_index, score)
+			VALUES ($1, $2, $3, $4, $5)
 		RETURNING id`,
-		req.UserId,
-		req.TaskId,
-		req.Code,
-		req.Language.DbName,
-		req.Results,
-		req.ResultPercent,
+		req.UserId, req.TaskId, req.Code, req.LanguageIndex, req.Score,
 	)
 	if err != nil {
 		switch err.Error() {
@@ -87,23 +101,45 @@ func (r *submissionRepo) createSubmissionWithDB(
 			return 0, tasks.ErrTaskNotFound
 		case `pq: invalid input value for enum language: ""`:
 			return 0, ErrInvalidLanguage
-		case `pq: new row for relation "submissions" violates check constraint "submissions_result_percent_check"`:
-			return 0, ErrInvalidResultPercent
+		case `pq: new row for relation "submissions" violates check constraint "submissions_score_check"`:
+			return 0, ErrInvalidScore
 		default:
 			return 0, err
+		}
+	}
+
+	for _, evaluation := range req.Evaluations {
+		result, err := db.ExecContext(ctx,
+			`INSERT INTO evaluations (submission_id, time, memory, status)
+			VALUES ($1, $2, $3, $4)`,
+			evaluation.SubmissionId,
+			evaluation.TimeMicroSeconds,
+			evaluation.MemoryKiloBytes,
+			evaluation.Status,
+		)
+		if err != nil {
+			return 0, err
+		}
+		n, err := result.RowsAffected()
+		if err != nil {
+			return 0, err
+		}
+		if n == 0 {
+			return 0, errors.New("invalid sql schema?")
 		}
 	}
 
 	return id, nil
 }
 
+// TODO: join things up
 func (r *submissionRepo) FindOneSubmission(id int) (types.Submission, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
 	var submission types.Submission
 	err := r.db.GetContext(ctx, &submission,
-		`SELECT id, user_id, task_id, code, language, results, result_percent 
+		`SELECT id, user_id, task_id, code, language_index, score
 		FROM submissions WHERE id = $1`,
 		id)
 	if err == sql.ErrNoRows {
@@ -121,7 +157,7 @@ func (r *submissionRepo) FindManySubmissions(
 
 	var submissions []types.Submission
 	err := r.db.SelectContext(ctx, &submissions,
-		`SELECT id, user_id, task_id, code, language, results, result_percent 
+		`SELECT id, user_id, task_id, code, language_index, score
 		FROM submissions
 		WHERE user_id = COALESCE($1, user_id) AND task_id = COALESCE($2, task_id)
 		ORDER BY id DESC`,

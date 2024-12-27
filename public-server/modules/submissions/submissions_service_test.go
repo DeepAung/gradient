@@ -1,6 +1,7 @@
 package submissions
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"testing"
@@ -36,81 +37,72 @@ var (
 			UserId:        2,
 			TaskId:        1,
 			Code:          "print(123456)",
-			Language:      "python",
-			Results:       "----------",
-			ResultPercent: 0,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         0,
 		},
 		{
 			Id:            8,
 			UserId:        1,
 			TaskId:        3,
 			Code:          "print(123456)",
-			Language:      "python",
-			Results:       "-",
-			ResultPercent: 0,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         0,
 		},
 		{
 			Id:            7,
 			UserId:        1,
 			TaskId:        2,
 			Code:          "print(123456)",
-			Language:      "python",
-			Results:       "----------",
-			ResultPercent: 0,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         0,
 		},
 		{
 			Id:            6,
 			UserId:        1,
 			TaskId:        2,
 			Code:          "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
-			Language:      "python",
-			Results:       "PPPPPPPPPP",
-			ResultPercent: 100,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         100,
 		},
 		{
 			Id:            5,
 			UserId:        1,
 			TaskId:        1,
 			Code:          "println(123456)",
-			Language:      "go",
-			Results:       "----------",
-			ResultPercent: 0,
+			LanguageIndex: int(proto.LanguageType_GO),
+			Score:         0,
 		},
 		{
 			Id:            4,
 			UserId:        1,
 			TaskId:        1,
 			Code:          "print(123456)",
-			Language:      "python",
-			Results:       "----------",
-			ResultPercent: 0,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         0,
 		},
 		{
 			Id:            3,
 			UserId:        1,
 			TaskId:        1,
 			Code:          "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
-			Language:      "python",
-			Results:       "PPPPPPPPPP",
-			ResultPercent: 100,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         100,
 		},
 		{
 			Id:            2,
 			UserId:        1,
 			TaskId:        1,
 			Code:          "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
-			Language:      "python",
-			Results:       "PPPPPPPPPP",
-			ResultPercent: 100,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         100,
 		},
 		{
 			Id:            1,
 			UserId:        1,
 			TaskId:        1,
 			Code:          "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
-			Language:      "python",
-			Results:       "PPPPPPPPPP",
-			ResultPercent: 100,
+			LanguageIndex: int(proto.LanguageType_PYTHON),
+			Score:         100,
 		},
 	}
 )
@@ -126,12 +118,11 @@ func init() {
 	graderCfg = graderconfig.NewConfig(jsonPath)
 	svc = NewSubmissionSvc(submissionsRepo, tasksRepo, client, graderCfg)
 
-	lang, _ := graderCfg.GetLanguageInfoFromProto(proto.LanguageType_PYTHON)
 	createReq = types.CreateSubmissionReq{
-		UserId:   1,
-		TaskId:   1,
-		Code:     "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
-		Language: lang,
+		UserId:        1,
+		TaskId:        1,
+		Code:          "for _ in range(len(int(input()))): print(int(input()) + int(input()))",
+		LanguageIndex: int(proto.LanguageType_PYTHON),
 	}
 }
 
@@ -234,14 +225,22 @@ func TestSubmitCodeMockGrader(t *testing.T) {
 
 	t.Run("invalid language", func(t *testing.T) {
 		req := createReq
-		req.Language = graderconfig.LanguageInfo{}
+		req.LanguageIndex = -100
 		_, _, err := svc.SubmitCode(req)
 		asserts.EqualError(t, err, ErrInvalidLanguage)
+	})
+
+	t.Run("empty code string", func(t *testing.T) {
+		req := createReq
+		req.Code = ""
+		_, _, err := svc.SubmitCode(req)
+		asserts.EqualError(t, err, errors.New("empty code???"))
 	})
 
 	t.Run("normal submit code", func(t *testing.T) {
 		req := createReq
 		resultCh, createCh, err := svc.SubmitCode(req)
+		asserts.EqualError(t, err, nil)
 
 		resultLen := 0
 		for result := range resultCh {
@@ -262,8 +261,8 @@ func TestSubmitCodeMockGrader(t *testing.T) {
 		asserts.Equal(t, "submission task id", submission.TaskId, req.TaskId)
 		asserts.Equal(t, "submission code", submission.Code, req.Code)
 
-		asserts.Equal(t, "submission language", submission.Language, req.Language.DbName)
-		asserts.Equal(t, "submission result length", len(submission.Results), resultLen)
+		asserts.Equal(t, "submission language", submission.LanguageIndex, req.LanguageIndex)
+		asserts.Equal(t, "submission result length", len(submission.Evaluations), resultLen)
 	})
 }
 

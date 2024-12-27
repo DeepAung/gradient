@@ -8,10 +8,10 @@ import (
 
 var (
 	mu      sync.Mutex
-	results = make(map[string]<-chan proto.ResultType)
+	results = make(map[string]<-chan proto.StatusType)
 )
 
-func CreateResult(resultId string, resultCh <-chan proto.ResultType) {
+func CreateResult(resultId string, resultCh <-chan proto.StatusType) {
 	mu.Lock()
 	results[resultId] = resultCh
 	mu.Unlock()
@@ -23,7 +23,7 @@ func DeleteResult(resultId string) {
 	mu.Unlock()
 }
 
-func PopResult(resultId string) (<-chan proto.ResultType, bool) {
+func PopResult(resultId string) (<-chan proto.StatusType, bool) {
 	mu.Lock()
 	resultCh, ok := results[resultId]
 	mu.Unlock()

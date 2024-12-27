@@ -1,3 +1,4 @@
+//go:build ignore
 #include <bits/stdc++.h>
 
 #define f first

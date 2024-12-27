@@ -24,7 +24,7 @@ func NewCppRunner() CodeRunner {
 	return cppRunner{}
 }
 
-func (r cppRunner) Build(ctx context.Context, codeFilename string) (bool, proto.ResultType) {
+func (r cppRunner) Build(ctx context.Context, codeFilename string) (bool, proto.StatusType) {
 	codeExt := filepath.Ext(codeFilename)
 	codeName := codeFilename[0 : len(codeFilename)-len(codeExt)]
 
@@ -32,7 +32,7 @@ func (r cppRunner) Build(ctx context.Context, codeFilename string) (bool, proto.
 
 	cmd := exec.CommandContext(ctx, buildCommand[0], buildCommand[1:]...)
 	if err := cmd.Run(); err != nil {
-		return false, proto.ResultType_COMPILATION_ERROR
+		return false, proto.StatusType_COMPILATION_ERROR
 	}
 	return true, 0
 }
@@ -40,7 +40,7 @@ func (r cppRunner) Build(ctx context.Context, codeFilename string) (bool, proto.
 func (r cppRunner) Run(
 	ctx context.Context,
 	codeFilename, inputFilename string,
-) (bool, proto.ResultType) {
+) (bool, proto.StatusType) {
 	// codeFilename = path1/path2/code.cpp
 	// inputFilename = path3/patth4/01.in
 
@@ -60,7 +60,7 @@ func (r cppRunner) Run(
 	// Open input file
 	inputFile, err := os.Open(inputFilename)
 	if err != nil {
-		return false, proto.ResultType_RUNTIME_ERROR
+		return false, proto.StatusType_RUNTIME_ERROR
 	}
 	defer inputFile.Close()
 
@@ -69,7 +69,7 @@ func (r cppRunner) Run(
 	tmp.Close()
 	resultFile, err := os.Create(resultFilename)
 	if err != nil {
-		return false, proto.ResultType_RUNTIME_ERROR
+		return false, proto.StatusType_RUNTIME_ERROR
 	}
 	defer resultFile.Close()
 
@@ -78,7 +78,7 @@ func (r cppRunner) Run(
 	cmd.Stdin = inputFile
 	cmd.Stdout = resultFile
 	if err := cmd.Run(); err != nil {
-		return false, proto.ResultType_RUNTIME_ERROR
+		return false, proto.StatusType_RUNTIME_ERROR
 	}
 	return true, 0
 }
