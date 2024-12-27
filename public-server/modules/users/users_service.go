@@ -14,27 +14,27 @@ import (
 
 var ErrInvalidCurrentPassword = fiber.NewError(fiber.StatusBadRequest, "invalid current password")
 
-type usersSvc struct {
+type usersSvcImpl struct {
 	repo   types.UsersRepo
 	storer storer.Storer
 	cfg    *config.Config
 }
 
 func NewUsersSvc(repo types.UsersRepo, storer storer.Storer, cfg *config.Config) types.UsersSvc {
-	return &usersSvc{
+	return &usersSvcImpl{
 		repo:   repo,
 		storer: storer,
 		cfg:    cfg,
 	}
 }
 
-func (s *usersSvc) GetUser(id int) (types.User, error) {
+func (s *usersSvcImpl) GetUser(id int) (types.User, error) {
 	return s.repo.FindOneUserById(id)
 }
 
 // TODO: rollback
 // TODO: write test
-func (s *usersSvc) ReplacePicture(
+func (s *usersSvcImpl) ReplacePicture(
 	id int,
 	email string,
 	picture *multipart.FileHeader,
@@ -74,7 +74,7 @@ func (s *usersSvc) ReplacePicture(
 	return res.Url, nil
 }
 
-func (s *usersSvc) UpdateUser(id int, req types.UpdateUserReq) error {
+func (s *usersSvcImpl) UpdateUser(id int, req types.UpdateUserReq) error {
 	if req.CurrentPassword != nil {
 		// check password
 		currentHashedPassword, err := s.repo.FindOneUserPasswordById(id)
@@ -95,6 +95,6 @@ func (s *usersSvc) UpdateUser(id int, req types.UpdateUserReq) error {
 	return s.repo.UpdateUser(id, req)
 }
 
-func (s *usersSvc) DeleteUser(id int) error {
+func (s *usersSvcImpl) DeleteUser(id int) error {
 	return s.repo.DeleteUser(id)
 }

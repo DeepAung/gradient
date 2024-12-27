@@ -17,19 +17,19 @@ var (
 	ErrInvalidTestcaseCount = fiber.NewError(fiber.StatusBadRequest, "invalid testcase count")
 )
 
-type tasksRepo struct {
+type tasksRepoImpl struct {
 	db      *sqlx.DB
 	timeout time.Duration
 }
 
 func NewTasksRepo(db *sqlx.DB, timeout time.Duration) types.TasksRepo {
-	return &tasksRepo{
+	return &tasksRepoImpl{
 		db:      db,
 		timeout: timeout,
 	}
 }
 
-func (r *tasksRepo) FindOneTask(userId, taskId int) (types.Task, error) {
+func (r *tasksRepoImpl) FindOneTask(userId, taskId int) (types.Task, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -55,7 +55,7 @@ func (r *tasksRepo) FindOneTask(userId, taskId int) (types.Task, error) {
 	return task, err
 }
 
-func (r *tasksRepo) FindOneTaskTestcaseCount(taskId int) (int, error) {
+func (r *tasksRepoImpl) FindOneTaskTestcaseCount(taskId int) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -71,7 +71,7 @@ func (r *tasksRepo) FindOneTaskTestcaseCount(taskId int) (int, error) {
 }
 
 // [startIndex, stopIndex)
-func (r *tasksRepo) FindManyTasks(
+func (r *tasksRepoImpl) FindManyTasks(
 	userId int,
 	search string,
 	onlyCompleted bool,
@@ -114,7 +114,7 @@ func (r *tasksRepo) FindManyTasks(
 	return tasks, err
 }
 
-func (r *tasksRepo) CreateTask(req types.CreateUpdateTaskReq) error {
+func (r *tasksRepoImpl) CreateTask(req types.CreateUpdateTaskReq) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -145,7 +145,7 @@ func (r *tasksRepo) CreateTask(req types.CreateUpdateTaskReq) error {
 	return nil
 }
 
-func (r *tasksRepo) UpdateTask(id int, req types.CreateUpdateTaskReq) error {
+func (r *tasksRepoImpl) UpdateTask(id int, req types.CreateUpdateTaskReq) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -176,7 +176,7 @@ func (r *tasksRepo) UpdateTask(id int, req types.CreateUpdateTaskReq) error {
 	return nil
 }
 
-func (r *tasksRepo) DeleteTask(id int) error {
+func (r *tasksRepoImpl) DeleteTask(id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 

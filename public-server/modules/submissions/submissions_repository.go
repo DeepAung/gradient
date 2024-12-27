@@ -19,7 +19,7 @@ var (
 	ErrInvalidScore       = fiber.NewError(fiber.StatusBadRequest, "invalid score")
 )
 
-type submissionRepo struct {
+type submissionRepoImpl struct {
 	db      *sqlx.DB
 	timeout time.Duration
 }
@@ -28,13 +28,13 @@ func NewSubmissionRepo(
 	db *sqlx.DB,
 	timeout time.Duration,
 ) types.SubmissionsRepo {
-	return &submissionRepo{
+	return &submissionRepoImpl{
 		db:      db,
 		timeout: timeout,
 	}
 }
 
-func (r *submissionRepo) CreateSubmission(req types.CreateSubmissionReq) (int, error) {
+func (r *submissionRepoImpl) CreateSubmission(req types.CreateSubmissionReq) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -54,7 +54,7 @@ func (r *submissionRepo) CreateSubmission(req types.CreateSubmissionReq) (int, e
 	return id, nil
 }
 
-func (r *submissionRepo) CanCreateSubmission(req types.CreateSubmissionReq) error {
+func (r *submissionRepoImpl) CanCreateSubmission(req types.CreateSubmissionReq) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -78,7 +78,7 @@ type mydb interface {
 	sqlx.ExecerContext
 }
 
-func (r *submissionRepo) createSubmissionWithDB(
+func (r *submissionRepoImpl) createSubmissionWithDB(
 	ctx context.Context,
 	db mydb,
 	req types.CreateSubmissionReq,
@@ -133,7 +133,7 @@ func (r *submissionRepo) createSubmissionWithDB(
 }
 
 // TODO: join things up
-func (r *submissionRepo) FindOneSubmission(id int) (types.Submission, error) {
+func (r *submissionRepoImpl) FindOneSubmission(id int) (types.Submission, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -149,7 +149,7 @@ func (r *submissionRepo) FindOneSubmission(id int) (types.Submission, error) {
 	return submission, err
 }
 
-func (r *submissionRepo) FindManySubmissions(
+func (r *submissionRepoImpl) FindManySubmissions(
 	req types.GetSubmissionsReq,
 ) ([]types.Submission, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)

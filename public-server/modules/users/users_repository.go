@@ -16,19 +16,19 @@ var (
 	ErrEmailUnique    = fiber.NewError(fiber.StatusBadRequest, "email already exist")
 )
 
-type usersRepo struct {
+type usersRepoImpl struct {
 	db      *sqlx.DB
 	timeout time.Duration
 }
 
 func NewUsersRepo(db *sqlx.DB, timeout time.Duration) types.UsersRepo {
-	return &usersRepo{
+	return &usersRepoImpl{
 		db:      db,
 		timeout: timeout,
 	}
 }
 
-func (r *usersRepo) CreateUser(username, email, hashedPassword string) (types.User, error) {
+func (r *usersRepoImpl) CreateUser(username, email, hashedPassword string) (types.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -53,7 +53,7 @@ func (r *usersRepo) CreateUser(username, email, hashedPassword string) (types.Us
 	}
 }
 
-func (r *usersRepo) FindOneUserById(id int) (types.User, error) {
+func (r *usersRepoImpl) FindOneUserById(id int) (types.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -70,7 +70,9 @@ func (r *usersRepo) FindOneUserById(id int) (types.User, error) {
 	return user, err
 }
 
-func (r *usersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWithPassword, error) {
+func (r *usersRepoImpl) FindOneUserWithPasswordByEmail(
+	email string,
+) (types.UserWithPassword, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -87,7 +89,7 @@ func (r *usersRepo) FindOneUserWithPasswordByEmail(email string) (types.UserWith
 	return user, err
 }
 
-func (r *usersRepo) FindOneUserPasswordById(id int) (string, error) {
+func (r *usersRepoImpl) FindOneUserPasswordById(id int) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -99,7 +101,7 @@ func (r *usersRepo) FindOneUserPasswordById(id int) (string, error) {
 	return hashedPassword, err
 }
 
-func (r *usersRepo) UpdateUser(id int, req types.UpdateUserReq) error {
+func (r *usersRepoImpl) UpdateUser(id int, req types.UpdateUserReq) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -124,7 +126,7 @@ func (r *usersRepo) UpdateUser(id int, req types.UpdateUserReq) error {
 	return nil
 }
 
-func (r *usersRepo) UpdateUserPassword(id int, hashedPassword string) error {
+func (r *usersRepoImpl) UpdateUserPassword(id int, hashedPassword string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -148,7 +150,7 @@ func (r *usersRepo) UpdateUserPassword(id int, hashedPassword string) error {
 	return nil
 }
 
-func (r *usersRepo) DeleteUser(id int) error {
+func (r *usersRepoImpl) DeleteUser(id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 

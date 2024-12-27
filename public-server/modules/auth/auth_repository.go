@@ -12,19 +12,19 @@ import (
 
 var ErrTokenNotFound = fiber.NewError(fiber.StatusBadRequest, "token not found")
 
-type authRepo struct {
+type authRepoImpl struct {
 	db      *sqlx.DB
 	timeout time.Duration
 }
 
 func NewAuthRepo(db *sqlx.DB, timeout time.Duration) types.AuthRepo {
-	return &authRepo{
+	return &authRepoImpl{
 		db:      db,
 		timeout: timeout,
 	}
 }
 
-func (r *authRepo) CreateToken(accessToken, refreshToken string) (types.Token, error) {
+func (r *authRepoImpl) CreateToken(accessToken, refreshToken string) (types.Token, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -42,7 +42,7 @@ func (r *authRepo) CreateToken(accessToken, refreshToken string) (types.Token, e
 	return token, err
 }
 
-func (r *authRepo) DeleteToken(tokenId int) error {
+func (r *authRepoImpl) DeleteToken(tokenId int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -61,7 +61,7 @@ func (r *authRepo) DeleteToken(tokenId int) error {
 	return nil
 }
 
-func (r *authRepo) HasToken(id int, refreshToken string) (bool, error) {
+func (r *authRepoImpl) HasToken(id int, refreshToken string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
@@ -75,7 +75,7 @@ func (r *authRepo) HasToken(id int, refreshToken string) (bool, error) {
 	return tmp == 1, err
 }
 
-func (r *authRepo) UpdateTokens(id int, newAccessToken, newRefreshToken string) error {
+func (r *authRepoImpl) UpdateTokens(id int, newAccessToken, newRefreshToken string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 

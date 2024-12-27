@@ -17,7 +17,7 @@ var (
 	)
 )
 
-type authSvc struct {
+type authSvcImpl struct {
 	authRepo  types.AuthRepo
 	usersRepo types.UsersRepo
 	cfg       *config.Config
@@ -28,14 +28,14 @@ func NewAuthSvc(
 	usersRepo types.UsersRepo,
 	cfg *config.Config,
 ) types.AuthSvc {
-	return &authSvc{
+	return &authSvcImpl{
 		authRepo:  authRepo,
 		usersRepo: usersRepo,
 		cfg:       cfg,
 	}
 }
 
-func (s *authSvc) SignUp(username, email, password string) (types.Passport, error) {
+func (s *authSvcImpl) SignUp(username, email, password string) (types.Passport, error) {
 	hashedPassword, err := utils.Hash(password)
 	if err != nil {
 		return types.Passport{}, err
@@ -48,7 +48,7 @@ func (s *authSvc) SignUp(username, email, password string) (types.Passport, erro
 	return s.generatePassport(user)
 }
 
-func (s *authSvc) SignIn(email, password string) (types.Passport, error) {
+func (s *authSvcImpl) SignIn(email, password string) (types.Passport, error) {
 	if password == "" {
 		return types.Passport{}, ErrInvalidEmailOrPassword
 	}
@@ -71,11 +71,11 @@ func (s *authSvc) SignIn(email, password string) (types.Passport, error) {
 	})
 }
 
-func (s *authSvc) SignOut(tokenId int) error {
+func (s *authSvcImpl) SignOut(tokenId int) error {
 	return s.authRepo.DeleteToken(tokenId)
 }
 
-func (s *authSvc) UpdateTokens(
+func (s *authSvcImpl) UpdateTokens(
 	tokenId int,
 	refreshToken string,
 ) (types.Token, *types.JwtClaims, error) {
@@ -123,7 +123,7 @@ func (s *authSvc) UpdateTokens(
 	}, claims, nil
 }
 
-func (s *authSvc) generatePassport(user types.User) (types.Passport, error) {
+func (s *authSvcImpl) generatePassport(user types.User) (types.Passport, error) {
 	payload := types.Payload{
 		UserId: user.Id,
 		Email:  user.Email,

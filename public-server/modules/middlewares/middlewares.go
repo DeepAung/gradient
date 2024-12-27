@@ -11,19 +11,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type middleware struct {
+type middlewareImpl struct {
 	cfg     *config.Config
 	authSvc types.AuthSvc
 }
 
 func NewMiddleware(cfg *config.Config, authSvc types.AuthSvc) types.Middleware {
-	return &middleware{
+	return &middlewareImpl{
 		cfg:     cfg,
 		authSvc: authSvc,
 	}
 }
 
-func (m *middleware) OnlyAuthorized() fiber.Handler {
+func (m *middlewareImpl) OnlyAuthorized() fiber.Handler {
 	return jwtware.New(jwtware.Config{
 		SigningKey:  jwtware.SigningKey{Key: m.cfg.Jwt.SecretKey},
 		TokenLookup: "cookie:accessToken",
@@ -54,7 +54,7 @@ func (m *middleware) OnlyAuthorized() fiber.Handler {
 	})
 }
 
-func (m *middleware) OnlyUnAuthorized() fiber.Handler {
+func (m *middlewareImpl) OnlyUnAuthorized() fiber.Handler {
 	return jwtware.New(jwtware.Config{
 		SigningKey:  jwtware.SigningKey{Key: m.cfg.Jwt.SecretKey},
 		TokenLookup: "cookie:accessToken",

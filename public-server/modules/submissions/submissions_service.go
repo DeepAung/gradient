@@ -8,7 +8,7 @@ import (
 	"github.com/DeepAung/gradient/public-server/modules/types"
 )
 
-type submissionSvc struct {
+type submissionSvcImpl struct {
 	submissionsRepo types.SubmissionsRepo
 	tasksRepo       types.TasksRepo
 	graderClient    proto.GraderClient
@@ -21,7 +21,7 @@ func NewSubmissionSvc(
 	graderClient proto.GraderClient,
 	graderCfg *graderconfig.Config,
 ) types.SubmissionsSvc {
-	return &submissionSvc{
+	return &submissionSvcImpl{
 		submissionsRepo: submissionsRepo,
 		tasksRepo:       tasksRepo,
 		graderClient:    graderClient,
@@ -32,7 +32,7 @@ func NewSubmissionSvc(
 // 1. try create submission in transaction that rollbacks (handle errors)
 // 2. grade code (return results by result channel)
 // 3. create submission (return by create channel)
-func (s *submissionSvc) SubmitCode(
+func (s *submissionSvcImpl) SubmitCode(
 	req types.CreateSubmissionReq,
 ) (<-chan proto.StatusType, <-chan types.CreateSubmissionRes, error) {
 	return nil, nil, errors.New("not implemented yet")
@@ -102,10 +102,12 @@ func (s *submissionSvc) SubmitCode(
 	// return resultCh, createCh, nil
 }
 
-func (s *submissionSvc) GetSubmission(id int) (types.Submission, error) {
+func (s *submissionSvcImpl) GetSubmission(id int) (types.Submission, error) {
 	return s.submissionsRepo.FindOneSubmission(id)
 }
 
-func (s *submissionSvc) GetSubmissions(req types.GetSubmissionsReq) ([]types.Submission, error) {
+func (s *submissionSvcImpl) GetSubmissions(
+	req types.GetSubmissionsReq,
+) ([]types.Submission, error) {
 	return s.submissionsRepo.FindManySubmissions(req)
 }
