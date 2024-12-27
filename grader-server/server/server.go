@@ -36,7 +36,7 @@ func newGraderServer(cfg *graderconfig.Config) *graderServer {
 
 func (s *graderServer) Grade(
 	input *proto.Input,
-	stream grpc.ServerStreamingServer[proto.Status],
+	stream grpc.ServerStreamingServer[proto.Result],
 ) error {
 	// Pull testcases from taskId
 	log.Println("Grader: start Grade() function")
@@ -73,18 +73,15 @@ func (s *graderServer) Grade(
 	log.Println("Grader: create/write file")
 
 	// Init runner & checker
-	runner, err := runner.NewCodeRunner(input.Language)
-	if err != nil {
-		return err
-	}
+	runner := runner.NewCodeRunner(s.cfg)
 	checker := checker.NewCodeChecker()
 	log.Println("Grader: init runner and checker")
 
 	// Build code
 	ctx := context.Background() // TODO: change to context with timeout
-	ok, result := runner.Build(ctx, codeFilename)
+	ok, result := runner.Build(ctx, input.Language, codeFilename)
 	if !ok {
-		stream.Send(&proto.Status{Result: result})
+		stream.Send(&proto.Result{Result: result})
 		return nil
 	}
 	log.Println("Grader: builded")
@@ -93,9 +90,9 @@ func (s *graderServer) Grade(
 	for i := 1; i <= n; i++ {
 		inputFilename := fmt.Sprintf("%s/%02d.in", testcasesDir, i)
 
-		ok, result := runner.Run(ctx, codeFilename, inputFilename)
+		ok, result := runner.Run(ctx, input.Language, codeFilename, inputFilename)
 		if !ok {
-			stream.Send(&proto.Status{Result: result})
+			stream.Send(&proto.Result{Result: result})
 			continue
 		}
 
@@ -106,9 +103,9 @@ func (s *graderServer) Grade(
 			return err
 		}
 		if ok {
-			stream.Send(&proto.Status{Result: proto.StatusType_PASS})
+			stream.Send(&proto.Result{Result: proto.StatusType_PASS})
 		} else {
-			stream.Send(&proto.Status{Result: proto.StatusType_INCORRECT})
+			stream.Send(&proto.Result{Result: proto.StatusType_INCORRECT})
 		}
 	}
 	log.Println("Grader: runned")

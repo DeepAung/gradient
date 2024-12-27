@@ -129,17 +129,18 @@ func TestCheckContentEqual(t *testing.T) {
 		str := generateRandomSpace(1024) +
 			generateRandomString(rand.Intn(100000)) +
 			generateRandomSpace(1024)
-		reader := strings.NewReader(str)
+		reader1 := strings.NewReader(str)
+		reader2 := strings.NewReader(str)
 		ctx := context.Background()
 
 		checker := NewCodeChecker()
-		check, err := checker.CheckContent(ctx, reader, reader)
+		check, err := checker.CheckContent(ctx, reader1, reader2)
 		if err != nil {
 			return false
 		}
 
 		simpleChecker := NewSimpleCodeChecker()
-		simpleCheck, err := simpleChecker.CheckContent(ctx, reader, reader)
+		simpleCheck, err := simpleChecker.CheckContent(ctx, reader1, reader2)
 		if err != nil {
 			return false
 		}
@@ -182,10 +183,6 @@ func TestCheckContentNotEqual(t *testing.T) {
 	if err := quick.Check(assertion, nil); err != nil {
 		t.Fatal("failed")
 	}
-}
-
-func checkContentUsingStringsPackage(s1 string, s2 string) bool {
-	return strings.TrimSpace(s1) == strings.TrimSpace(s2)
 }
 
 var (

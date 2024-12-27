@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GraderClient interface {
-	Grade(ctx context.Context, in *Input, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Status], error)
+	Grade(ctx context.Context, in *Input, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Result], error)
 }
 
 type graderClient struct {
@@ -37,13 +37,13 @@ func NewGraderClient(cc grpc.ClientConnInterface) GraderClient {
 	return &graderClient{cc}
 }
 
-func (c *graderClient) Grade(ctx context.Context, in *Input, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Status], error) {
+func (c *graderClient) Grade(ctx context.Context, in *Input, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Result], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Grader_ServiceDesc.Streams[0], Grader_Grade_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Input, Status]{ClientStream: stream}
+	x := &grpc.GenericClientStream[Input, Result]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -54,13 +54,13 @@ func (c *graderClient) Grade(ctx context.Context, in *Input, opts ...grpc.CallOp
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Grader_GradeClient = grpc.ServerStreamingClient[Status]
+type Grader_GradeClient = grpc.ServerStreamingClient[Result]
 
 // GraderServer is the server API for Grader service.
 // All implementations must embed UnimplementedGraderServer
 // for forward compatibility.
 type GraderServer interface {
-	Grade(*Input, grpc.ServerStreamingServer[Status]) error
+	Grade(*Input, grpc.ServerStreamingServer[Result]) error
 	mustEmbedUnimplementedGraderServer()
 }
 
@@ -71,7 +71,7 @@ type GraderServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGraderServer struct{}
 
-func (UnimplementedGraderServer) Grade(*Input, grpc.ServerStreamingServer[Status]) error {
+func (UnimplementedGraderServer) Grade(*Input, grpc.ServerStreamingServer[Result]) error {
 	return status.Errorf(codes.Unimplemented, "method Grade not implemented")
 }
 func (UnimplementedGraderServer) mustEmbedUnimplementedGraderServer() {}
@@ -100,11 +100,11 @@ func _Grader_Grade_Handler(srv interface{}, stream grpc.ServerStream) error {
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(GraderServer).Grade(m, &grpc.GenericServerStream[Input, Status]{ServerStream: stream})
+	return srv.(GraderServer).Grade(m, &grpc.GenericServerStream[Input, Result]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Grader_GradeServer = grpc.ServerStreamingServer[Status]
+type Grader_GradeServer = grpc.ServerStreamingServer[Result]
 
 // Grader_ServiceDesc is the grpc.ServiceDesc for Grader service.
 // It's only intended for direct use with grpc.RegisterService,
