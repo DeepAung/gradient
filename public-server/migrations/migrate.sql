@@ -6,10 +6,10 @@ DROP TABLE IF EXISTS "tokens" CASCADE;
 DROP TABLE IF EXISTS "tasks" CASCADE;
 DROP TABLE IF EXISTS "users_tasks_info" CASCADE;
 DROP TABLE IF EXISTS "submissions" CASCADE;
-DROP TABLE IF EXISTS "evaluations" CASCADE;
+DROP TABLE IF EXISTS "submission_results" CASCADE;
 DROP TYPE IF EXISTS LANGUAGE CASCADE;
 DROP TRIGGER IF EXISTS update_score_and_solved_number ON submissions CASCADE;
-DROP TRIGGER IF EXISTS update_max_time_memory ON evaluations CASCADE;
+DROP TRIGGER IF EXISTS update_max_time_memory ON submission_results CASCADE;
 DROP FUNCTION IF EXISTS update_max_time_memory CASCADE;
 DROP FUNCTION IF EXISTS update_score_and_solved_number CASCADE;
 
@@ -60,13 +60,13 @@ CREATE TABLE "submissions" (
   "code" VARCHAR NOT NULL,
   "language_index" INTEGER NOT NULL, -- refer to language index in proto file
   "score" REAL NOT NULL CHECK("score" >= 0),
-  "max_time" INTEGER NOT NULL, -- micro seconds (ms)
-  "max_memory" INTEGER NOT NULL, -- kilo bytes (kB)
+  "max_time" INTEGER NOT NULL DEFAULT 0, -- micro seconds (ms)
+  "max_memory" INTEGER NOT NULL DEFAULT 0, -- kilo bytes (kB)
   "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
   "updated_at" TIMESTAMP NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "evaluations" (
+CREATE TABLE "submission_results" (
   "id" SERIAL PRIMARY KEY,
   "submission_id" INTEGER REFERENCES "submissions" ("id") ON DELETE CASCADE,
   "time" INTEGER NOT NULL, -- micro seconds (ms)
@@ -114,7 +114,7 @@ AFTER INSERT ON submissions
   FOR EACH ROW EXECUTE FUNCTION update_score_and_solved_number();
 
 CREATE TRIGGER update_max_time_memory
-AFTER INSERT ON evaluations
+AFTER INSERT ON submission_results
   FOR EACH ROW EXECUTE FUNCTION update_max_time_memory();
 
 COMMIT;

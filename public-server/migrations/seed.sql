@@ -21,7 +21,7 @@ INSERT INTO "submissions" ("user_id", "task_id", "code", "language_index", "scor
   (1, 3, 'print(123456)', '3', 0, 0, 0),
   (2, 1, 'print(123456)', '3', 0, 0, 0);
 
-INSERT INTO "evaluations" ("submission_id", "time", "memory", "status")
+INSERT INTO "submission_results" ("submission_id", "time", "memory", "status")
   VALUES
     (1, 10, 18, 'P'), (1, 0, 20, 'P'), (1, 0, 17, 'P'), (1, 0, 0, 'P'), (1, 0, 0, 'P'), (1, 0, 0, 'P'), (1, 0, 0, 'P'), (1, 0, 0, 'P'), (1, 0, 0, 'P'), (1, 0, 0, 'P'),
     (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'), (2, 0, 0, 'P'),

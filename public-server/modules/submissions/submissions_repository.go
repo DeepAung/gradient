@@ -86,7 +86,7 @@ func (r *submissionRepo) createSubmissionWithDB(
 	var id int
 
 	err := sqlx.GetContext(ctx, db, &id,
-		`INSERT INTO submissions ( user_id, task_id, code, language_index, score)
+		`INSERT INTO submissions (user_id, task_id, code, language_index, score)
 			VALUES ($1, $2, $3, $4, $5)
 		RETURNING id`,
 		req.UserId, req.TaskId, req.Code, req.LanguageIndex, req.Score,
@@ -108,14 +108,14 @@ func (r *submissionRepo) createSubmissionWithDB(
 		}
 	}
 
-	for _, evaluation := range req.Evaluations {
+	for _, result := range req.Results {
 		result, err := db.ExecContext(ctx,
 			`INSERT INTO evaluations (submission_id, time, memory, status)
 			VALUES ($1, $2, $3, $4)`,
-			evaluation.SubmissionId,
-			evaluation.TimeMicroSeconds,
-			evaluation.MemoryKiloBytes,
-			evaluation.Status,
+			id,
+			result.TimeMicroSeconds,
+			result.MemoryKiloBytes,
+			result.Status,
 		)
 		if err != nil {
 			return 0, err

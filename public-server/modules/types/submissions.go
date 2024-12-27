@@ -31,7 +31,7 @@ type Submission struct {
 	CreatedAt           time.Time `db:"created_at"`
 	UpdatedAt           time.Time `db:"updated_at"`
 
-	Evaluations  []Evaluation `db:"evaluations"`
+	Results      []SubmissionResult `db:"results"`
 	UserUsername string
 }
 
@@ -42,8 +42,8 @@ type CreateSubmissionReq struct {
 	LanguageIndex int
 
 	// assign after complete submiting code
-	Score       float32
-	Evaluations []CreateEvaluationReq
+	Score   float32
+	Results []CreateSubmissionResultReq
 }
 
 type GetSubmissionsReq struct {
@@ -56,7 +56,7 @@ type CreateSubmissionRes struct {
 	Err error
 }
 
-type Evaluation struct {
+type SubmissionResult struct {
 	Id               int  `db:"id"`
 	SubmissionId     int  `db:"submission_id"`
 	TimeMicroSeconds int  `db:"time"`
@@ -64,8 +64,7 @@ type Evaluation struct {
 	Status           byte `db:"status"`
 }
 
-type CreateEvaluationReq struct {
-	SubmissionId     int  `db:"submission_id"`
+type CreateSubmissionResultReq struct {
 	TimeMicroSeconds int  `db:"time"`
 	MemoryKiloBytes  int  `db:"memory"`
 	Status           byte `db:"status"`

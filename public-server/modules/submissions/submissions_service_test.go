@@ -262,7 +262,7 @@ func TestSubmitCodeMockGrader(t *testing.T) {
 		asserts.Equal(t, "submission code", submission.Code, req.Code)
 
 		asserts.Equal(t, "submission language", submission.LanguageIndex, req.LanguageIndex)
-		asserts.Equal(t, "submission result length", len(submission.Evaluations), resultLen)
+		asserts.Equal(t, "submission result length", len(submission.Results), resultLen)
 	})
 }
 

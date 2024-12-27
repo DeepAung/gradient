@@ -47,7 +47,7 @@ func (s *submissionSvc) SubmitCode(
 	//
 	// stream, err := s.graderClient.Grade(context.Background(), &proto.Input{
 	// 	Code:     req.Code,
-	// 	Language: req.LanguageIndex.Proto,
+	// 	Language: languageInfo.Proto,
 	// 	TaskId:   uint32(req.TaskId),
 	// })
 	// if err != nil {
@@ -63,7 +63,7 @@ func (s *submissionSvc) SubmitCode(
 	// resultCh := make(chan proto.StatusType, testcaseCount)
 	// createCh := make(chan types.CreateSubmissionRes)
 	// go func() {
-	// 	req.Results = ""
+	// 	req.Evaluations = make([]types.CreateEvaluationReq, 0)
 	// 	passCount, totalCount := 0, 0
 	// 	for {
 	// 		result, err := stream.Recv()
@@ -80,6 +80,9 @@ func (s *submissionSvc) SubmitCode(
 	//
 	// 		resultCh <- resVar
 	// 		resultInfo, _ := s.graderCfg.GetResultInfoFromProto(resVar) // TODO: handle error
+	// 		req.Evaluations = append(req.Evaluations, types.CreateEvaluationReq{
+	//
+	// 		})
 	// 		req.Results += resultInfo.Char
 	//
 	// 		totalCount++
