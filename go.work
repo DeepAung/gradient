@@ -2,5 +2,5 @@ go 1.22.3
 
 use (
 	./grader-server
-	./public-server
+	./website-server
 )
