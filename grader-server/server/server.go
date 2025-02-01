@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
+	"time"
 
 	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/grader-server/pkg/checker"
@@ -18,12 +18,17 @@ import (
 
 type graderServer struct {
 	proto.UnimplementedGraderServer
-	cfg *graderconfig.Config
+	cfg            *graderconfig.Config
+	testcasePuller testcasepuller.TestcasePuller
 }
 
-func NewGraderServer(cfg *graderconfig.Config) *graderServer {
+func NewGraderServer(
+	cfg *graderconfig.Config,
+	testcasePuller testcasepuller.TestcasePuller,
+) *graderServer {
 	return &graderServer{
-		cfg: cfg,
+		cfg:            cfg,
+		testcasePuller: testcasePuller,
 	}
 }
 
@@ -32,15 +37,15 @@ func (s *graderServer) Grade(
 	stream grpc.ServerStreamingServer[proto.Result],
 ) error {
 	// Pull testcases from taskId
-	log.Println("Grader: start Grade() function")
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
 	testcasesDir := fmt.Sprintf("tmp/testcases/%d", input.TaskId)
-	testcasePuller := testcasepuller.NewMockTestcasePuller()
-	n, err := testcasePuller.Pull(int(input.TaskId), testcasesDir)
+	testcaseNumber, err := s.testcasePuller.Pull(ctx, int(input.TaskId), testcasesDir)
 	if err != nil {
-		log.Println("Grader: err testcase Pull: ", err.Error())
 		return err
 	}
-	log.Println("Grader: testcase pulled")
+	// End
 
 	// Create code file/folder
 	submissionId := uuid.NewString()
@@ -53,34 +58,32 @@ func (s *graderServer) Grade(
 
 	codeFilename := fmt.Sprintf("tmp/submissions/%s/%s", submissionId, "code"+codeExt)
 	if err := os.MkdirAll(submissionDir, os.ModePerm); err != nil {
-		log.Println("Grader: err os.MkdirAll", err.Error())
 		return err
 	}
 	codeFile, err := os.Create(codeFilename)
 	if err != nil {
-		log.Println("Grader: err os.Create: ", err.Error())
 		return err
 	}
 	codeFile.Write([]byte(input.Code))
 	codeFile.Close()
-	log.Println("Grader: create/write file")
+	// End
 
-	// Init runner & checker
 	runner := runner.NewCodeRunner(s.cfg)
 	checker := checker.NewCodeChecker()
-	log.Println("Grader: init runner and checker")
 
 	// Build code
-	ctx := context.Background() // TODO: change to context with timeout
+	ctx, cancel = context.WithTimeout(context.Background(), time.Duration(input.TimeLimit))
+	defer cancel()
+
 	ok, result := runner.Build(ctx, input.Language, codeFilename)
 	if !ok {
 		stream.Send(&proto.Result{Status: result})
 		return nil
 	}
-	log.Println("Grader: builded")
+	// End
 
 	// Run and Check code
-	for i := 1; i <= n; i++ {
+	for i := 1; i <= testcaseNumber; i++ {
 		inputFilename := fmt.Sprintf("%s/%02d.in", testcasesDir, i)
 
 		ok, result := runner.Run(ctx, input.Language, codeFilename, inputFilename)
@@ -101,13 +104,13 @@ func (s *graderServer) Grade(
 			stream.Send(&proto.Result{Status: proto.StatusType_INCORRECT})
 		}
 	}
-	log.Println("Grader: runned")
+	// End
 
 	// Delete code file/folder
 	if err := os.RemoveAll(submissionDir); err != nil {
 		return err
 	}
-	log.Println("Grader: cleaned")
+	// End
 
 	return nil
 }

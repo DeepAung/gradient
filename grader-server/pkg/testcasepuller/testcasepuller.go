@@ -1,9 +1,12 @@
 package testcasepuller
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 type TestcasePuller interface {
-	Pull(taskId int, directory string) (int, error)
+	Pull(ctx context.Context, taskId int, directory string) (int, error)
 }
 
 type mockTestcasePuller struct{}
@@ -12,7 +15,7 @@ func NewMockTestcasePuller() TestcasePuller {
 	return &mockTestcasePuller{}
 }
 
-func (m *mockTestcasePuller) Pull(taskId int, directory string) (int, error) {
+func (m *mockTestcasePuller) Pull(ctx context.Context, taskId int, directory string) (int, error) {
 	if taskId == 1 {
 		return 3, nil
 	}

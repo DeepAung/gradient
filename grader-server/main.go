@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"github.com/DeepAung/gradient/grader-server/graderconfig"
+	"github.com/DeepAung/gradient/grader-server/pkg/testcasepuller"
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/DeepAung/gradient/grader-server/server"
 	grpc "google.golang.org/grpc"
@@ -25,9 +26,10 @@ func main() {
 	}
 
 	cfg := graderconfig.NewConfig(graderConfigFile)
+	testcasePuller := testcasepuller.NewMockTestcasePuller()
+	graderServer := server.NewGraderServer(cfg, testcasePuller)
 
 	grpcServer := grpc.NewServer()
-	graderServer := server.NewGraderServer(cfg)
 	proto.RegisterGraderServer(grpcServer, graderServer)
 
 	log.Printf("grader server running on address %s", *address)
