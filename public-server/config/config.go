@@ -22,7 +22,6 @@ type AppConfig struct {
 	BodyLimit     string
 	DbUrl         string
 	GcpBucketName string
-	AesSecretKey  []byte
 }
 
 type JwtConfig struct {
@@ -44,7 +43,6 @@ func NewConfig(envPath string) *Config {
 			BodyLimit:     os.Getenv("BODY_LIMIT"),
 			DbUrl:         os.Getenv("DB_URL"),
 			GcpBucketName: os.Getenv("GCP_BUCKET_NAME"),
-			AesSecretKey:  []byte(os.Getenv("AES_SECRET_KEY")),
 		},
 		Jwt: &JwtConfig{
 			SecretKey:      []byte(os.Getenv("SECRET_KEY")),

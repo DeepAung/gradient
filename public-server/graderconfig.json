@@ -1,0 +1,68 @@
+{
+  "languages": [
+    {
+      "protoIndex": 0,
+      "name": "CPP",
+      "dbName": "cpp",
+      "extension": ".cpp",
+      "buildCommand": "g++ {filename} -o {file}",
+      "runCommand": "{file}"
+    },
+    {
+      "protoIndex": 1,
+      "name": "C",
+      "dbName": "c",
+      "extension": ".c",
+      "buildCommand": "gcc {filename} -o {file}",
+      "runCommand": "{file}"
+    },
+    {
+      "protoIndex": 2,
+      "name": "Golang",
+      "dbName": "go",
+      "extension": ".go",
+      "buildCommand": "go build {filename} -o {file}",
+      "runCommand": "{file}"
+    },
+    {
+      "protoIndex": 3,
+      "name": "Python",
+      "dbName": "python",
+      "extension": ".py",
+      "buildCommand": "",
+      "runCommand": "python3 {filename}"
+    }
+  ],
+  "statuses": [
+    {
+      "protoIndex": 0,
+      "name": "Compilation Error",
+      "char": "C"
+    },
+    {
+      "protoIndex": 1,
+      "name": "Pass",
+      "char": "P"
+    },
+    {
+      "protoIndex": 2,
+      "name": "Incorrect",
+      "char": "-"
+    },
+    {
+      "protoIndex": 3,
+      "name": "Runtime Error",
+      "char": "X"
+    },
+    {
+      "protoIndex": 4,
+      "name": "Time limit exceeded",
+      "char": "T"
+    },
+    {
+      "protoIndex": 5,
+      "name": "Memory limit exceeded",
+      "char": "M"
+    }
+  ]
+}

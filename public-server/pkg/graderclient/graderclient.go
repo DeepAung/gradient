@@ -58,7 +58,7 @@ func (g *graderClientMock) Grade(
 	ctx context.Context,
 	in *proto.Input,
 	opts ...grpc.CallOption,
-) (grpc.ServerStreamingClient[proto.Status], error) {
+) (grpc.ServerStreamingClient[proto.Result], error) {
 	return &serverStreamingClientMock{
 		testcaseCount: g.testcaseCount,
 		sleep:         g.sleep,
@@ -70,14 +70,16 @@ type serverStreamingClientMock struct {
 	sleep         time.Duration
 }
 
-func (s *serverStreamingClientMock) Recv() (*proto.Status, error) {
+func (s *serverStreamingClientMock) Recv() (*proto.Result, error) {
 	if s.testcaseCount <= 0 {
-		return &proto.Status{}, io.EOF
+		return &proto.Result{}, io.EOF
 	}
 
 	s.testcaseCount--
 	time.Sleep(s.sleep)
-	return &proto.Status{Result: proto.StatusType(rand.Intn(6))}, nil
+	return &proto.Result{
+		Status: proto.StatusType(rand.Intn(6)),
+	}, nil
 }
 func (s *serverStreamingClientMock) Header() (metadata.MD, error) { return nil, nil }
 func (s *serverStreamingClientMock) Trailer() metadata.MD         { return nil }

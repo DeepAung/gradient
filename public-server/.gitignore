@@ -1,5 +1,5 @@
 *.env*
-!*.env.example
+!*.env.dev
 tmp/
 node_modules/
 **/*_templ.go

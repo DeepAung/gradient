@@ -1,12 +1,10 @@
-package main
+package server
 
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"log"
-	"net"
 	"os"
 
 	"github.com/DeepAung/gradient/grader-server/graderconfig"
@@ -15,12 +13,7 @@ import (
 	"github.com/DeepAung/gradient/grader-server/pkg/testcasepuller"
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"github.com/google/uuid"
-	grpc "google.golang.org/grpc"
-)
-
-var (
-	port     = flag.Int("port", 50051, "The server port")
-	jsonPath = flag.String("json", ".env.dev.json", "json path")
+	"google.golang.org/grpc"
 )
 
 type graderServer struct {
@@ -28,7 +21,7 @@ type graderServer struct {
 	cfg *graderconfig.Config
 }
 
-func newGraderServer(cfg *graderconfig.Config) *graderServer {
+func NewGraderServer(cfg *graderconfig.Config) *graderServer {
 	return &graderServer{
 		cfg: cfg,
 	}
@@ -81,7 +74,7 @@ func (s *graderServer) Grade(
 	ctx := context.Background() // TODO: change to context with timeout
 	ok, result := runner.Build(ctx, input.Language, codeFilename)
 	if !ok {
-		stream.Send(&proto.Result{Result: result})
+		stream.Send(&proto.Result{Status: result})
 		return nil
 	}
 	log.Println("Grader: builded")
@@ -92,7 +85,7 @@ func (s *graderServer) Grade(
 
 		ok, result := runner.Run(ctx, input.Language, codeFilename, inputFilename)
 		if !ok {
-			stream.Send(&proto.Result{Result: result})
+			stream.Send(&proto.Result{Status: result})
 			continue
 		}
 
@@ -103,9 +96,9 @@ func (s *graderServer) Grade(
 			return err
 		}
 		if ok {
-			stream.Send(&proto.Result{Result: proto.StatusType_PASS})
+			stream.Send(&proto.Result{Status: proto.StatusType_PASS})
 		} else {
-			stream.Send(&proto.Result{Result: proto.StatusType_INCORRECT})
+			stream.Send(&proto.Result{Status: proto.StatusType_INCORRECT})
 		}
 	}
 	log.Println("Grader: runned")
@@ -117,21 +110,4 @@ func (s *graderServer) Grade(
 	log.Println("Grader: cleaned")
 
 	return nil
-}
-
-func main() {
-	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	cfg := graderconfig.NewConfig(*jsonPath)
-
-	grpcServer := grpc.NewServer()
-	graderServer := newGraderServer(cfg)
-	proto.RegisterGraderServer(grpcServer, graderServer)
-
-	log.Printf("grader server running on port %d", *port)
-	grpcServer.Serve(lis)
 }

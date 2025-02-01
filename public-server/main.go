@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 
+	_ "embed"
+
 	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/public-server/config"
 	"github.com/DeepAung/gradient/public-server/database"
@@ -15,15 +17,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var (
-	envPath  = flag.String("env", ".env.dev", "env path")
-	jsonPath = flag.String("json", "../grader-server/.env.dev.json", "grader config json path")
-)
+//go:embed graderconfig.json
+var graderConfigFile []byte
+
+var envPath = flag.String("env", ".env.dev", "env path")
 
 func main() {
 	flag.Parse()
 
-	graderCfg := graderconfig.NewConfig(*jsonPath)
+	graderCfg := graderconfig.NewConfig(graderConfigFile)
 	cfg := config.NewConfig(*envPath)
 	db := database.InitDB(cfg.App.DbUrl)
 	app := fiber.New()

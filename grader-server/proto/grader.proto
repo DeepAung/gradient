@@ -32,5 +32,5 @@ message Input {
 message Result {
   uint32 time = 1;
   uint32 memory = 2;
-  StatusType result = 3;
+  StatusType status = 3;
 }

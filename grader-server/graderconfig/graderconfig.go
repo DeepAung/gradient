@@ -2,9 +2,7 @@ package graderconfig
 
 import (
 	"encoding/json"
-	"io"
 	"log"
-	"os"
 
 	"github.com/DeepAung/gradient/grader-server/proto"
 )
@@ -31,20 +29,9 @@ type StatusInfo struct {
 	Proto      proto.StatusType
 }
 
-func NewConfig(jsonPath string) *Config {
-	file, err := os.Open(jsonPath)
-	if err != nil {
-		log.Fatal("error open config file: ", err.Error())
-	}
-	defer file.Close()
-
-	data, err := io.ReadAll(file)
-	if err != nil {
-		log.Fatal("error reading config file: ", err.Error())
-	}
-
+func NewConfig(graderConfigFile []byte) *Config {
 	var config Config
-	if err := json.Unmarshal(data, &config); err != nil {
+	if err := json.Unmarshal(graderConfigFile, &config); err != nil {
 		log.Fatal("error unmashal data: ", err.Error())
 	}
 
