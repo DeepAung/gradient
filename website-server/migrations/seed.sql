@@ -5,10 +5,10 @@ INSERT INTO "users" ("username", "email", "password", "is_admin")
   ('admin', 'admin@gmail.com', '$2a$10$OqveZpSgfd5KMU1Xeo6UUeCYMWYgz3kjkuZvrxEaVsujmnxI/P/oeNUMB', TRUE);
 
 INSERT INTO "tasks" ("display_name", "url_name", "content_url", "testcase_count")
-  VALUES ('Two Sum', 'two_sum', '', 10),
-  ('Two Product', 'two_product', '', 10),
-  ('Dijkstra', 'dijkstra', '', 1),
-  ('Floyd Warshall', 'floyd_warshall', '', 1);
+  VALUES ('Sum of Pairs', 'sum_of_pairs', '', 10),
+  ('Multiplication Madness', 'multiplication_madness', '', 10),
+  ('Shortest Path in a Small Town', 'shortest_path_in_a_small_town', '', 1),
+  ('Shortest Paths in a Large Town', 'shortest_paths_in_a_large_town', '', 1);
 
 INSERT INTO "submissions" ("user_id", "task_id", "code", "language_index", "score", "max_time", "max_memory")
   VALUES (1, 1, 'for _ in range(len(int(input()))): print(int(input()) + int(input()))', '3', 100, 0, 0),

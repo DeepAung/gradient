@@ -18,7 +18,7 @@ db.migrate:
 db.seed:
 	docker cp ./migrations/seed.sql gradient-postgresql:/seed.sql
 	docker exec -it gradient-postgresql psql postgresql://myuser:mypassword@0.0.0.0/mydb -f /seed.sql
-	go run migrations/seed.go
+	go run migrations/seed.go --env .env.dev
 db.reset:
 	make db.migrate db.seed
 

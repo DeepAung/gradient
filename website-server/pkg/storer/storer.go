@@ -9,9 +9,10 @@ import (
 const basePath = "https://storage.googleapis.com/gradient-bucket-dev"
 
 type Storer interface {
-	UploadMultipart(f *multipart.FileHeader, dest string, public bool) (FileRes, error)
 	Upload(reader io.Reader, dest string, public bool) (FileRes, error)
+	UploadMultipart(f *multipart.FileHeader, dest string, public bool) (FileRes, error)
 	Delete(dest string) error
+	DeleteFolder(dest string) error
 	DownloadContent(dest string) (string, error)
 }
 

@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"sync"
 	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/DeepAung/gradient/website-server/config"
+	"google.golang.org/api/iterator"
 )
 
 var (
@@ -105,6 +107,46 @@ func (s *gcpStorer) Delete(dest string) error {
 		return fmt.Errorf("Object(%q).Delete: %w", dest, err)
 	}
 	fmt.Printf("Blob %v deleted.\n", dest)
+	return nil
+}
+
+func (s *gcpStorer) DeleteFolder(dest string) error {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return fmt.Errorf("storage.NewClient: %w", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	it := client.Bucket(s.cfg.App.GcpBucketName).Objects(ctx, &storage.Query{
+		Prefix: dest,
+	})
+
+	maxGoroutines := 10
+	sem := make(chan struct{}, maxGoroutines)
+	var wg sync.WaitGroup
+
+	for {
+		attr, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(name string) {
+			fmt.Println("start deleting")
+			s.Delete(name)
+			fmt.Println("\tstop deleting")
+			wg.Done()
+			<-sem
+		}(attr.Name)
+	}
+	wg.Wait()
+
 	return nil
 }
 
