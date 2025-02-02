@@ -24,14 +24,14 @@ func init() {
 
 func TestUpload(t *testing.T) {
 	t.Run("private upload", func(t *testing.T) {
-		reader := bytes.NewBuffer([]byte("hello world"))
+		reader := bytes.NewBufferString("hello world")
 		res, err := storer.Upload(reader, privateDest, false)
 		asserts.EqualError(t, err, nil)
 		asserts.Equal(t, "file result", res, NewFileResFromDest(privateDest))
 	})
 
 	t.Run("public upload", func(t *testing.T) {
-		reader := bytes.NewBuffer([]byte("hello world"))
+		reader := bytes.NewBufferString("hello world")
 		res, err := storer.Upload(reader, publicDest, true)
 		asserts.EqualError(t, err, nil)
 		asserts.Equal(t, "file result", res, NewFileResFromDest(publicDest))
@@ -42,6 +42,26 @@ func TestUpload(t *testing.T) {
 		res, err := storer.Upload(reader, publicDest, false)
 		asserts.EqualError(t, err, ErrUploadExistingDest)
 		asserts.Equal(t, "file result", res, FileRes{})
+	})
+}
+
+func TestDownloadContent(t *testing.T) {
+	t.Run("public download", func(t *testing.T) {
+		content, err := storer.DownloadContent(publicDest)
+		asserts.EqualError(t, err, nil)
+		asserts.Equal(t, "content", content, "hello world")
+	})
+
+	t.Run("private download", func(t *testing.T) {
+		content, err := storer.DownloadContent(privateDest)
+		asserts.EqualError(t, err, nil)
+		asserts.Equal(t, "content", content, "hello world")
+	})
+
+	t.Run("destination not found", func(t *testing.T) {
+		content, err := storer.DownloadContent(notExistDest)
+		asserts.EqualError(t, err, ErrDownloadNotExistingDest)
+		asserts.Equal(t, "content", content, "")
 	})
 }
 

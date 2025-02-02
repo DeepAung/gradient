@@ -1,6 +1,7 @@
 package storer
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	ErrUploadExistingDest    = errors.New("upload into existing destination")
-	ErrDeleteNotExistingDest = errors.New("delete at not existing destination")
+	ErrUploadExistingDest      = errors.New("upload into existing destination")
+	ErrDeleteNotExistingDest   = errors.New("delete at not existing destination")
+	ErrDownloadNotExistingDest = errors.New("download from not existing destination")
 )
 
 type gcpStorer struct {
@@ -104,4 +106,35 @@ func (s *gcpStorer) Delete(dest string) error {
 	}
 	fmt.Printf("Blob %v deleted.\n", dest)
 	return nil
+}
+
+func (s *gcpStorer) DownloadContent(dest string) (string, error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return "", fmt.Errorf("storage.NewClient: %w", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(ctx, 50*time.Second)
+	defer cancel()
+
+	buf := bytes.NewBufferString("")
+
+	rc, err := client.Bucket(s.cfg.App.GcpBucketName).Object(dest).NewReader(ctx)
+	if err != nil {
+		if err.Error() == storage.ErrObjectNotExist.Error() {
+			return "", ErrDownloadNotExistingDest
+		}
+		return "", fmt.Errorf("Object(%q).NewReader: %w", dest, err)
+	}
+	defer rc.Close()
+
+	if _, err := io.Copy(buf, rc); err != nil {
+		return "", fmt.Errorf("io.Copy: %w", err)
+	}
+
+	fmt.Printf("Blob %v downloaded.\n", dest)
+
+	return buf.String(), nil
 }
