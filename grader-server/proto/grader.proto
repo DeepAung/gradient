@@ -32,7 +32,7 @@ message Input {
 }
 
 message Result {
-  uint32 time = 1;   // in milliseconds
-  uint32 memory = 2; // in kilobytes
-  StatusType status = 3;
+  StatusType status = 1;
+  uint32 time = 2;   // in milliseconds
+  uint32 memory = 3; // in kilobytes
 }

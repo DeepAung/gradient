@@ -30,7 +30,7 @@ func main() {
 	db := database.InitDB(cfg.App.DbUrl)
 	app := fiber.New()
 
-	storer := storer.NewGcpStorer(cfg)
+	storer := storer.NewGcpStorer(cfg.App.GcpBucketName)
 
 	graderClient, conn, err := graderclient.NewGraderClient(
 		cfg.App.GraderAddress,

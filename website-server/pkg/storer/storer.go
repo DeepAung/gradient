@@ -11,9 +11,13 @@ const basePath = "https://storage.googleapis.com/gradient-bucket-dev"
 type Storer interface {
 	Upload(reader io.Reader, dest string, public bool) (FileRes, error)
 	UploadMultipart(f *multipart.FileHeader, dest string, public bool) (FileRes, error)
+
 	Delete(dest string) error
-	DeleteFolder(dest string) error
+	DeleteFolder(dir string) error
+
+	Download(remoteDest string, localDest string) error
 	DownloadContent(dest string) (string, error)
+	DownloadFolder(remoteDir string, localDir string) (count int, err error)
 }
 
 // url      = https://storage.googleapis.com/gradient-bucket-dev/users/1/profile.jpg

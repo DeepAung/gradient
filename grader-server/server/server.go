@@ -10,25 +10,22 @@ import (
 	"github.com/DeepAung/gradient/grader-server/graderconfig"
 	"github.com/DeepAung/gradient/grader-server/pkg/checker"
 	"github.com/DeepAung/gradient/grader-server/pkg/runner"
-	"github.com/DeepAung/gradient/grader-server/pkg/testcasepuller"
 	"github.com/DeepAung/gradient/grader-server/proto"
+	"github.com/DeepAung/gradient/website-server/pkg/storer"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 )
 
 type graderServer struct {
 	proto.UnimplementedGraderServer
-	cfg            *graderconfig.Config
-	testcasePuller testcasepuller.TestcasePuller
+	cfg    *graderconfig.Config
+	storer storer.Storer
 }
 
-func NewGraderServer(
-	cfg *graderconfig.Config,
-	testcasePuller testcasepuller.TestcasePuller,
-) *graderServer {
+func NewGraderServer(cfg *graderconfig.Config, storer storer.Storer) *graderServer {
 	return &graderServer{
-		cfg:            cfg,
-		testcasePuller: testcasePuller,
+		cfg:    cfg,
+		storer: storer,
 	}
 }
 
@@ -37,14 +34,13 @@ func (s *graderServer) Grade(
 	stream grpc.ServerStreamingServer[proto.Result],
 ) error {
 	// Pull testcases from taskId
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
+	remoteDir := fmt.Sprintf("testcases/%d", input.TaskId)
 	testcasesDir := fmt.Sprintf("tmp/testcases/%d", input.TaskId)
-	testcaseNumber, err := s.testcasePuller.Pull(ctx, int(input.TaskId), testcasesDir)
+	cnt, err := s.storer.DownloadFolder(remoteDir, testcasesDir)
 	if err != nil {
 		return err
 	}
+	testcaseCount := cnt / 2
 	// End
 
 	// Create code file/folder
@@ -72,23 +68,23 @@ func (s *graderServer) Grade(
 	checker := checker.NewCodeChecker()
 
 	// Build code
-	ctx, cancel = context.WithTimeout(context.Background(), time.Duration(input.TimeLimit))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	ok, result := runner.Build(ctx, input.Language, codeFilename)
+	ok, status := runner.Build(ctx, input.Language, codeFilename)
 	if !ok {
-		stream.Send(&proto.Result{Status: result})
+		stream.Send(&proto.Result{Status: status})
 		return nil
 	}
 	// End
 
 	// Run and Check code
-	for i := 1; i <= testcaseNumber; i++ {
+	for i := 1; i <= testcaseCount; i++ {
 		inputFilename := fmt.Sprintf("%s/%02d.in", testcasesDir, i)
 
 		ok, result := runner.Run(ctx, input.Language, codeFilename, inputFilename)
 		if !ok {
-			stream.Send(&proto.Result{Status: result})
+			stream.Send(&result)
 			continue
 		}
 
@@ -99,9 +95,17 @@ func (s *graderServer) Grade(
 			return err
 		}
 		if ok {
-			stream.Send(&proto.Result{Status: proto.StatusType_PASS})
+			stream.Send(&proto.Result{
+				Status: proto.StatusType_PASS,
+				Time:   result.Time,
+				Memory: result.Memory,
+			})
 		} else {
-			stream.Send(&proto.Result{Status: proto.StatusType_INCORRECT})
+			stream.Send(&proto.Result{
+				Status: proto.StatusType_INCORRECT,
+				Time:   result.Time,
+				Memory: result.Memory,
+			})
 		}
 	}
 	// End

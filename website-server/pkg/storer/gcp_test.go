@@ -19,7 +19,7 @@ var (
 
 func init() {
 	cfg = config.NewConfig("../../.env.dev")
-	storer = NewGcpStorer(cfg)
+	storer = NewGcpStorer(cfg.App.GcpBucketName)
 }
 
 func TestUpload(t *testing.T) {

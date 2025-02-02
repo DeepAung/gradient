@@ -24,7 +24,7 @@ var (
 
 func init() {
 	cfg = config.NewConfig("../../.env.dev")
-	myStorer = storer.NewGcpStorer(cfg)
+	myStorer = storer.NewGcpStorer(cfg.App.GcpBucketName)
 
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)

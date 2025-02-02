@@ -25,7 +25,7 @@ type CodeRunner interface {
 		ctx context.Context,
 		language proto.LanguageType,
 		codeFilename, inputFilename string,
-	) (bool, proto.StatusType)
+	) (bool, proto.Result)
 }
 
 type codeRunner struct {

@@ -15,7 +15,7 @@ var envPath = flag.String("env", ".env.dev", "env path")
 
 func main() {
 	cfg := config.NewConfig(*envPath)
-	s := storer.NewGcpStorer(cfg)
+	s := storer.NewGcpStorer(cfg.App.GcpBucketName)
 	err := s.DeleteFolder("testcases")
 	if err != nil {
 		fmt.Printf("s.DeleteFolder: %v", err)

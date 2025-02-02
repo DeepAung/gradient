@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"os"
 	"sync"
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/DeepAung/gradient/website-server/config"
 	"google.golang.org/api/iterator"
 )
 
@@ -22,12 +22,12 @@ var (
 )
 
 type gcpStorer struct {
-	cfg *config.Config
+	gcpBucketName string
 }
 
-func NewGcpStorer(cfg *config.Config) Storer {
+func NewGcpStorer(gcpBucketName string) Storer {
 	return &gcpStorer{
-		cfg: cfg,
+		gcpBucketName: gcpBucketName,
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *gcpStorer) Upload(reader io.Reader, dest string, public bool) (FileRes,
 	ctx, cancel := context.WithTimeout(ctx, 50*time.Second)
 	defer cancel()
 
-	o := client.Bucket(s.cfg.App.GcpBucketName).Object(dest)
+	o := client.Bucket(s.gcpBucketName).Object(dest)
 
 	o = o.If(storage.Conditions{DoesNotExist: true})
 
@@ -92,7 +92,7 @@ func (s *gcpStorer) Delete(dest string) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	o := client.Bucket(s.cfg.App.GcpBucketName).Object(dest)
+	o := client.Bucket(s.gcpBucketName).Object(dest)
 
 	attrs, err := o.Attrs(ctx)
 	if err != nil {
@@ -110,7 +110,7 @@ func (s *gcpStorer) Delete(dest string) error {
 	return nil
 }
 
-func (s *gcpStorer) DeleteFolder(dest string) error {
+func (s *gcpStorer) DeleteFolder(dir string) error {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -118,11 +118,11 @@ func (s *gcpStorer) DeleteFolder(dest string) error {
 	}
 	defer client.Close()
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 50*time.Second)
 	defer cancel()
 
-	it := client.Bucket(s.cfg.App.GcpBucketName).Objects(ctx, &storage.Query{
-		Prefix: dest,
+	it := client.Bucket(s.gcpBucketName).Objects(ctx, &storage.Query{
+		Prefix: dir,
 	})
 
 	maxGoroutines := 10
@@ -138,9 +138,7 @@ func (s *gcpStorer) DeleteFolder(dest string) error {
 		wg.Add(1)
 		sem <- struct{}{}
 		go func(name string) {
-			fmt.Println("start deleting")
 			s.Delete(name)
-			fmt.Println("\tstop deleting")
 			wg.Done()
 			<-sem
 		}(attr.Name)
@@ -163,7 +161,7 @@ func (s *gcpStorer) DownloadContent(dest string) (string, error) {
 
 	buf := bytes.NewBufferString("")
 
-	rc, err := client.Bucket(s.cfg.App.GcpBucketName).Object(dest).NewReader(ctx)
+	rc, err := client.Bucket(s.gcpBucketName).Object(dest).NewReader(ctx)
 	if err != nil {
 		if err.Error() == storage.ErrObjectNotExist.Error() {
 			return "", ErrDownloadNotExistingDest
@@ -179,4 +177,93 @@ func (s *gcpStorer) DownloadContent(dest string) (string, error) {
 	fmt.Printf("Blob %v downloaded.\n", dest)
 
 	return buf.String(), nil
+}
+
+func (s *gcpStorer) Download(remoteDest string, localDest string) error {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return fmt.Errorf("storage.NewClient: %w", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(ctx, 50*time.Second)
+	defer cancel()
+
+	f, err := os.Create(localDest)
+	if err != nil {
+		return fmt.Errorf("os.Create: %w", err)
+	}
+
+	rc, err := client.Bucket(s.gcpBucketName).Object(remoteDest).NewReader(ctx)
+	if err != nil {
+		if err.Error() == storage.ErrObjectNotExist.Error() {
+			return ErrDownloadNotExistingDest
+		}
+		return fmt.Errorf("Object(%q).NewReader: %w", remoteDest, err)
+	}
+	defer rc.Close()
+
+	if _, err := io.Copy(f, rc); err != nil {
+		return fmt.Errorf("io.Copy: %w", err)
+	}
+
+	if err = f.Close(); err != nil {
+		return fmt.Errorf("f.Close: %w", err)
+	}
+
+	fmt.Printf("Blob %v downloaded.\n", remoteDest)
+
+	return nil
+}
+
+// TODO: check error handling
+func (s *gcpStorer) DownloadFolder(remoteDir string, localDir string) (int, error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("storage.NewClient: %w", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(ctx, 50*time.Second)
+	defer cancel()
+
+	it := client.Bucket(s.gcpBucketName).Objects(ctx, &storage.Query{
+		Prefix: remoteDir,
+	})
+
+	maxGoroutines := 10
+	sem := make(chan struct{}, maxGoroutines)
+	var wg sync.WaitGroup
+	_, cancel2 := context.WithCancelCause(context.Background())
+
+	counter := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		default:
+
+		}
+		attr, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		counter++
+
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(name string) {
+			err = s.Download(remoteDir+"/"+name, localDir+"/"+name)
+			if err != nil {
+				cancel2(err)
+			}
+			wg.Done()
+			<-sem
+		}(attr.Name)
+	}
+	wg.Wait()
+
+	return counter, nil
 }
