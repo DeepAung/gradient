@@ -115,7 +115,7 @@ func init() {
 	submissionsRepo = NewSubmissionRepo(db, cfg.App.Timeout)
 	tasksRepo := tasks.NewTasksRepo(db, cfg.App.Timeout)
 	client = graderclient.NewGraderClientMock(10, 0)
-	graderCfg = graderconfig.NewConfig(jsonPath)
+	graderCfg = graderconfig.NewConfig([]byte(jsonPath))
 	svc = NewSubmissionSvc(submissionsRepo, tasksRepo, client, graderCfg)
 
 	createReq = types.CreateSubmissionReq{

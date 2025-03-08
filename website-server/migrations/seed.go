@@ -11,11 +11,14 @@ import (
 	"github.com/DeepAung/gradient/website-server/pkg/storer"
 )
 
-var envPath = flag.String("env", ".env.dev", "env path")
+var (
+	envPath       = flag.String("env", ".env.dev", "env path")
+	maxGoroutines = 5
+)
 
 func main() {
 	cfg := config.NewConfig(*envPath)
-	s := storer.NewGcpStorer(cfg.App.GcpBucketName)
+	s := storer.NewGcpStorer(cfg.App.GcpBucketName, maxGoroutines)
 	err := s.DeleteFolder("testcases")
 	if err != nil {
 		fmt.Printf("s.DeleteFolder: %v", err)
@@ -26,7 +29,6 @@ func main() {
 		log.Fatalf("os.ReadDir: %v", err)
 	}
 
-	maxGoroutines := 10
 	sem := make(chan struct{}, maxGoroutines)
 	var wg sync.WaitGroup
 

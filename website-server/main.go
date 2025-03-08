@@ -20,7 +20,10 @@ import (
 //go:embed graderconfig.json
 var graderConfigFile []byte
 
-var envPath = flag.String("env", ".env.dev", "env path")
+var (
+	envPath       = flag.String("env", ".env.dev", "env path")
+	maxGoroutines = 5
+)
 
 func main() {
 	flag.Parse()
@@ -30,7 +33,7 @@ func main() {
 	db := database.InitDB(cfg.App.DbUrl)
 	app := fiber.New()
 
-	storer := storer.NewGcpStorer(cfg.App.GcpBucketName)
+	storer := storer.NewGcpStorer(cfg.App.GcpBucketName, maxGoroutines)
 
 	graderClient, conn, err := graderclient.NewGraderClient(
 		cfg.App.GraderAddress,

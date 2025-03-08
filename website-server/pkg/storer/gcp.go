@@ -23,11 +23,15 @@ var (
 
 type gcpStorer struct {
 	gcpBucketName string
+	maxGoroutines int
+	sem           chan struct{}
 }
 
-func NewGcpStorer(gcpBucketName string) Storer {
+func NewGcpStorer(gcpBucketName string, maxGoroutines int) Storer {
 	return &gcpStorer{
 		gcpBucketName: gcpBucketName,
+		maxGoroutines: maxGoroutines,
+		sem:           make(chan struct{}, maxGoroutines),
 	}
 }
 
@@ -125,8 +129,6 @@ func (s *gcpStorer) DeleteFolder(dir string) error {
 		Prefix: dir,
 	})
 
-	maxGoroutines := 10
-	sem := make(chan struct{}, maxGoroutines)
 	var wg sync.WaitGroup
 
 	for {
@@ -136,11 +138,11 @@ func (s *gcpStorer) DeleteFolder(dir string) error {
 		}
 
 		wg.Add(1)
-		sem <- struct{}{}
+		s.sem <- struct{}{}
 		go func(name string) {
 			s.Delete(name)
 			wg.Done()
-			<-sem
+			<-s.sem
 		}(attr.Name)
 	}
 	wg.Wait()
@@ -179,7 +181,7 @@ func (s *gcpStorer) DownloadContent(dest string) (string, error) {
 	return buf.String(), nil
 }
 
-func (s *gcpStorer) Download(remoteDest string, localDest string) error {
+func (s *gcpStorer) DownloadFile(remoteDest string, localDest string) error {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -233,19 +235,19 @@ func (s *gcpStorer) DownloadFolder(remoteDir string, localDir string) (int, erro
 		Prefix: remoteDir,
 	})
 
-	maxGoroutines := 10
-	sem := make(chan struct{}, maxGoroutines)
 	var wg sync.WaitGroup
-	_, cancel2 := context.WithCancelCause(context.Background())
+	errCh := make(chan error)
 
 	counter := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return 0, ctx.Err()
+		case err := <-errCh:
+			return 0, err
 		default:
-
 		}
+
 		attr, err := it.Next()
 		if err == iterator.Done {
 			break
@@ -253,14 +255,15 @@ func (s *gcpStorer) DownloadFolder(remoteDir string, localDir string) (int, erro
 		counter++
 
 		wg.Add(1)
-		sem <- struct{}{}
+		s.sem <- struct{}{}
 		go func(name string) {
-			err = s.Download(remoteDir+"/"+name, localDir+"/"+name)
+			err = s.DownloadFile(remoteDir+"/"+name, localDir+"/"+name)
 			if err != nil {
-				cancel2(err)
+				errCh <- err
+				close(errCh)
 			}
 			wg.Done()
-			<-sem
+			<-s.sem
 		}(attr.Name)
 	}
 	wg.Wait()

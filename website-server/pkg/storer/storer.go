@@ -15,7 +15,7 @@ type Storer interface {
 	Delete(dest string) error
 	DeleteFolder(dir string) error
 
-	Download(remoteDest string, localDest string) error
+	DownloadFile(remoteDest string, localDest string) error
 	DownloadContent(dest string) (string, error)
 	DownloadFolder(remoteDir string, localDir string) (count int, err error)
 }

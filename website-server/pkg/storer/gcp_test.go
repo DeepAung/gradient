@@ -12,14 +12,15 @@ var (
 	cfg    *config.Config
 	storer Storer
 
-	privateDest  = "tests/private.txt"
-	publicDest   = "tests/public.txt"
-	notExistDest = "tests/not-exist.txt"
+	privateDest   = "tests/private.txt"
+	publicDest    = "tests/public.txt"
+	notExistDest  = "tests/not-exist.txt"
+	maxGoroutines = 5
 )
 
 func init() {
 	cfg = config.NewConfig("../../.env.dev")
-	storer = NewGcpStorer(cfg.App.GcpBucketName)
+	storer = NewGcpStorer(cfg.App.GcpBucketName, maxGoroutines)
 }
 
 func TestUpload(t *testing.T) {

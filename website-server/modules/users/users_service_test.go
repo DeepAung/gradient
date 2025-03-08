@@ -15,6 +15,7 @@ import (
 var (
 	migrateSourceName = "../../migrations/migrate.sql"
 	seedSourceName    = "../../migrations/seed.sql"
+	maxGoroutines     = 5
 	cfg               *config.Config
 	myStorer          storer.Storer
 	db                *sqlx.DB
@@ -24,7 +25,7 @@ var (
 
 func init() {
 	cfg = config.NewConfig("../../.env.dev")
-	myStorer = storer.NewGcpStorer(cfg.App.GcpBucketName)
+	myStorer = storer.NewGcpStorer(cfg.App.GcpBucketName, maxGoroutines)
 
 	db = database.InitDB(cfg.App.DbUrl)
 	database.RunSQL(db, migrateSourceName)
