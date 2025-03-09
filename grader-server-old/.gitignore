@@ -1,0 +1,4 @@
+tmp/
+examples/example
+examples/timeout
+examples/testcases/*.result

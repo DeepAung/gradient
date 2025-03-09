@@ -5,7 +5,7 @@
       "name": "CPP",
       "dbName": "cpp",
       "extension": ".cpp",
-      "buildCommand": "g++ {filename} -o {file}",
+      "buildCommand": "/usr/bin/g++ {filename} -o {file}",
       "runCommand": "{file}"
     },
     {
@@ -13,7 +13,7 @@
       "name": "C",
       "dbName": "c",
       "extension": ".c",
-      "buildCommand": "gcc {filename} -o {file}",
+      "buildCommand": "/usr/bin/gcc {filename} -o {file}",
       "runCommand": "{file}"
     },
     {
@@ -21,7 +21,7 @@
       "name": "Golang",
       "dbName": "go",
       "extension": ".go",
-      "buildCommand": "go build {filename} -o {file}",
+      "buildCommand": "/usr/bin/go build {filename} -o {file}",
       "runCommand": "{file}"
     },
     {
@@ -30,7 +30,7 @@
       "dbName": "python",
       "extension": ".py",
       "buildCommand": "",
-      "runCommand": "python3 {filename}"
+      "runCommand": "/usr/bin/python3 {filename}"
     }
   ],
   "statuses": [

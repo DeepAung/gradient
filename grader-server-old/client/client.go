@@ -6,23 +6,17 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/DeepAung/gradient/grader-server/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var (
-	serverAddr = flag.String(
-		"addr",
-		"localhost:50051",
-		"The server address in the format of host:port",
-	)
-	serverHostOverride = flag.String(
-		"server_host_override",
-		"x.test.example.com",
-		"The server name used to verify the hostname returned by the TLS handshake",
-	)
+var serverAddr = flag.String(
+	"addr",
+	"localhost:50051",
+	"The server address in the format of host:port",
 )
 
 func main() {
@@ -37,14 +31,14 @@ func main() {
 	defer conn.Close()
 	client := proto.NewGraderClient(conn)
 
-	submitCode(client, "example.cpp", proto.LanguageType_CPP)
-	// submitCode(client, "example.c", proto.LanguageType_C)
-	// submitCode(client, "example.go", proto.LanguageType_GO)
-	// submitCode(client, "example.py", proto.LanguageType_PYTHON)
+	submitCode(client, "examples/code.cpp", proto.LanguageType_CPP)
+	// submitCode(client, "examples/code.c", proto.LanguageType_C)
+	// submitCode(client, "examples/code.go", proto.LanguageType_GO)
+	// submitCode(client, "examples/code.py", proto.LanguageType_PYTHON)
 }
 
 func submitCode(client proto.GraderClient, codeFilename string, language proto.LanguageType) {
-	file, err := os.Open("examples/" + codeFilename)
+	file, err := os.Open(codeFilename)
 	if err != nil {
 		log.Fatal("os.Open: ", err)
 	}
@@ -54,10 +48,15 @@ func submitCode(client proto.GraderClient, codeFilename string, language proto.L
 	}
 	code := string(b)
 
-	stream, err := client.Grade(context.Background(), &proto.Input{
-		Code:     code,
-		Language: language,
-		TaskId:   1,
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	stream, err := client.Grade(ctx, &proto.Input{
+		Code:        code,
+		Language:    language,
+		TaskId:      1,
+		TimeLimit:   1000,
+		MemoryLimit: 1000,
 	})
 	if err != nil {
 		log.Fatal("client.Grade: ", err)
@@ -72,6 +71,9 @@ func submitCode(client proto.GraderClient, codeFilename string, language proto.L
 			log.Fatal("stream.Recv: ", err)
 		}
 
-		log.Println("result: ", proto.StatusType_name[int32(result.Result)])
+		log.Println("result")
+		log.Println(" - status: ", proto.StatusType_name[int32(result.Status)])
+		log.Println(" - time: ", result.Time)
+		log.Println(" - memory: ", result.Memory)
 	}
 }

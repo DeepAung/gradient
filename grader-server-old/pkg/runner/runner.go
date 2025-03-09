@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -13,28 +14,37 @@ import (
 	"github.com/DeepAung/gradient/grader-server/proto"
 )
 
-var ErrInvalidLanguage = errors.New("invalid language")
+var (
+	ErrInvalidLanguage    = errors.New("invalid language")
+	ErrRunCommandNotFound = errors.New("run command not found")
+)
 
 type CodeRunner interface {
+	// Build() will return ok, status
 	Build(
 		ctx context.Context,
 		language proto.LanguageType,
 		codeFilename string,
 	) (bool, proto.StatusType)
+
+	// Run() will return ok, result, err
+	// if err != nil then return err
+	// if ok then proceed to check the output using checker
+	// else return bad result (e.g. runtime error, time limit exceeded)
 	Run(
 		ctx context.Context,
 		language proto.LanguageType,
 		codeFilename, inputFilename string,
-	) (bool, proto.Result)
+	) (bool, proto.Result, error)
 }
 
 type codeRunner struct {
-	graderCfg *graderconfig.Config
+	cfg *graderconfig.Config
 }
 
-func NewCodeRunner(graderCfg *graderconfig.Config) CodeRunner {
+func NewCodeRunner(cfg *graderconfig.Config) CodeRunner {
 	return &codeRunner{
-		graderCfg: graderCfg,
+		cfg: cfg,
 	}
 }
 
@@ -43,7 +53,7 @@ func (r *codeRunner) Build(
 	language proto.LanguageType,
 	codeFilename string,
 ) (bool, proto.StatusType) {
-	languageInfo, ok := r.graderCfg.GetLanguageInfoFromProto(language)
+	languageInfo, ok := r.cfg.GetLanguageInfoFromProto(language)
 	if !ok {
 		log.Printf("error: %v", ErrInvalidLanguage.Error())
 		return false, proto.StatusType_COMPILATION_ERROR
@@ -69,15 +79,14 @@ func (r *codeRunner) Run(
 	ctx context.Context,
 	language proto.LanguageType,
 	codeFilename, inputFilename string,
-) (bool, proto.StatusType) {
-	languageInfo, ok := r.graderCfg.GetLanguageInfoFromProto(language)
+) (bool, proto.Result, error) {
+	languageInfo, ok := r.cfg.GetLanguageInfoFromProto(language)
 	if !ok {
-		log.Printf("error: %v", ErrInvalidLanguage.Error())
-		return false, proto.StatusType_COMPILATION_ERROR
+		return false, proto.Result{}, ErrInvalidLanguage
 	}
 
 	if languageInfo.RunCommand == "" {
-		return true, 0
+		return false, proto.Result{}, ErrRunCommandNotFound
 	}
 
 	codeExt := filepath.Ext(codeFilename)                        // ".cpp"
@@ -94,14 +103,14 @@ func (r *codeRunner) Run(
 	// Open input file
 	inputFile, err := os.Open(inputFilename)
 	if err != nil {
-		return false, proto.StatusType_RUNTIME_ERROR
+		return false, proto.Result{}, err
 	}
 	defer inputFile.Close()
 
 	// Create result file
 	resultFile, err := os.Create(resultFilename)
 	if err != nil {
-		return false, proto.StatusType_RUNTIME_ERROR
+		return false, proto.Result{}, err
 	}
 	defer resultFile.Close()
 
@@ -111,9 +120,9 @@ func (r *codeRunner) Run(
 	cmd.Stdin = inputFile
 	cmd.Stdout = resultFile
 	if err := cmd.Run(); err != nil {
-		return false, proto.StatusType_RUNTIME_ERROR
+		return false, proto.Result{Status: proto.StatusType_RUNTIME_ERROR}, nil
 	}
-	return true, 0
+	return true, proto.Result{}, nil
 }
 
 func getNameAndExt(filename string) (name string, ext string) {
@@ -123,6 +132,7 @@ func getNameAndExt(filename string) (name string, ext string) {
 }
 
 func parseCommand(cmd, codeFilename, codeName string) []string {
+	cmd = fmt.Sprintf("isolate --run -- %s", cmd)
 	return strings.Split(
 		strings.NewReplacer("{filename}", codeFilename, "{name}", codeName).Replace(cmd),
 		" ",
