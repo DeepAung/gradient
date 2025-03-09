@@ -28,11 +28,11 @@ message Input {
   LanguageType language = 2;
   uint32 taskId = 3;
   uint32 timeLimit = 4;   // in milliseconds
-  uint32 memoryLimit = 5; // in kilobytes
+  uint32 memoryLimit = 5; // in KiB
 }
 
 message Result {
   StatusType status = 1;
   uint32 time = 2;   // in milliseconds
-  uint32 memory = 3; // in kilobytes
+  uint32 memory = 3; // in KiB
 }
