@@ -20,7 +20,7 @@ func TestRunPython(t *testing.T) {
 	// 20480 bytes = 20 * 1024 = 20 KiB
 	runCommand(
 		t,
-		"isolate --wait -i 01.in -o 01.result -t 0.1 -m 10000 -M run.log --run -- /usr/bin/python3 code.py",
+		"isolate --wait -i 01.in -o 01.result -t 0.1 -m 20480 -M run.log --run -- /usr/bin/python3 code.py",
 	)
 }
 
