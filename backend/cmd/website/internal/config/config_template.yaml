@@ -1,0 +1,4 @@
+app:
+  address: localhost:3000
+database:
+  dsn: postgres://postgres:@localhost:5432/test?sslmode=disable
